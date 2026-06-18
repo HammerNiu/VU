@@ -1,121 +1,163 @@
 {
   "name": "001",
-
   "demographic": {
-      "gender":  ["男", "女"],
-      "grade": [
-          "大一",
-          "大二",
-          "大三",
-          "大四",
-          "研究生"
-      ],
-      "age_range": {
-          "本科": { "min": 18, "max": 22 },
-          "研究生": { "min": 22, "max": 26 }
-      }
-  },
-
-  "education": {
-      "university_tier": {
-          "options": ["985", "211", "双一流", "一本", "二本", "专科"],
-          "distribution": [0.08, 0.12, 0.15, 0.3, 0.25, 0.1]
-      },
-
-      "city_tier": {
-          "options": ["一线", "新一线", "二线", "三线"],
-          "distribution": [0.2, 0.35, 0.3, 0.15]
-      },
-
-      "academic_performance": {
-          "ranking": ["前10%", "10-30%", "30-60%", "后40%"],
-          "distribution": [0.1, 0.2, 0.3, 0.4]
-      },
-  
-      "major": {
-          "理工类": ["计算机科学与技术", "软件工程", "电子信息工程", "通信工程", "机械工程", "土木工程", "数学与应用数学", "物理学", "化学", "生物科学"],
-          "文史哲类": ["汉语言文学", "历史学", "哲学", "英语", "日语"],
-          "经管法类": ["经济学", "金融学", "工商管理", "会计学", "法学"],
-          "艺术类": ["美术学", "视觉传达设计", "音乐学", "舞蹈表演"],
-          "医学类": ["临床医学", "护理学", "药学", "公共卫生"],
-          "其他": ["教育学", "心理学", "新闻传播学"]
-      },
-    
-      "living_situation": {
-          "options": ["4人宿舍", "6人宿舍", "8人宿舍", "校外居住"],
-          "distribution": [0.4, 0.25, 0.25, 0.1]
-      }
-  },
-
-  "socioeconomic": {
-      "family_income_level": {
-          "options": ["<10万", "10-30万", "30-50万", "50-80万", "80万+"],
-          "distribution": [0.12, 0.43, 0.3, 0.1, 0.05]
-      },
-
-      "monthly_budget": {
-          "min": 1500,
-          "max": 3000,
-          "segments": [
-              { "range": [1500, 1800], "weight": 0.2 },
-              { "range": [1800, 2200], "weight": 0.35 },
-              { "range": [2200, 2600], "weight": 0.3 },
-              { "range": [2600, 3000], "weight": 0.15 }
-          ]
-      }
-  },
-
-  "behavior": {
-      "digital_behavior": {
-          "screen_time": ["<3h", "3-6h", "6-9h", "9h+"],
-          "app_usage_focus": ["短视频", "游戏", "学习", "社交"],
-          "platform_preference": ["iOS", "Android", "HarmonyOS", "混合"]
-      },
-
-      "device_stack": {
-        "options": ["手机", "笔记本", "平板", "耳机", "手表"],
-        "probability_presence": [1.0, 0.9, 0.5, 0.85, 0.4]
-      },
-
-      "phones": {
-          "华为": [
-              "Mate 80 Pro Max", "Mate 80 Pro", "Mate 80", "Mate 70",
-              "Pura 80 Ultra", "Pura 80 Pro+", "Pura 80 Pro", "Pura 80",
-              "Nova 15 Ultra", "Nova 15 Pro", "Nova 15",
-              "畅想系", "Pocket 3", "华为其他"
-          ],
-          "苹果": [
-              "iPhone 17 Pro", "iPhone 17 Air",
-              "iPhone 16 Pro Max", "iPhone 16 Pro", "iPhone 16", "iPhone 16 Plus",
-              "iPhone 15 Pro Max", "iPhone 15 Pro", "iPhone 15",
-              "iPhone SE4", "苹果其他"
-          ],
-          "小米": [
-              "Xiaomi 17 Ultra", "Xiaomi 17 Pro", "Xiaomi 17",
-              "Xiaomi 15 Ultra", "Xiaomi 15 Pro", "Xiaomi 15",
-              "Redmi"
-          ],
-          "OPPO": ["Find X系", "Find N系", "Reno系", "K系", "A系"],
-          "vivo": ["X系", "S系", "Y系"],
-          "荣耀": ["Magic系", "数字系列", "WIN系"],
-          "其他": ["一加", "iQOO系", "魅族", "三星", "realme"]
-      },
-
-      "social_density": {
-          "options": ["低", "中", "高", "极高"],
-          "distribution": [0.2, 0.45, 0.25, 0.1]
-      }
-  },
-
-  "psychology": {
-      "mbti": {
-          "options": [
-              "ISTJ","ISFJ","INFJ","INTJ",
-              "ISTP","ISFP","INFP","INTP",
-              "ESTP","ESFP","ENFP","ENTP",
-              "ESTJ","ESFJ","ENFJ","ENTJ"
-          ],
-          "distribution": [0.12,0.14,0.02,0.03,0.05,0.08,0.09,0.04,0.04,0.07,0.08,0.03,0.09,0.13,0.03,0.01]
-      }
+    "gender": ["男", "女"],
+    "grade": [
+      "大一",
+      "大二",
+      "大三",
+      "大四",
+      "研究生",
+      "考研二战备战中"
+    ],
+    "age_range": {
+      "本科": { "min": 18, "max": 22 },
+      "研究生": { "min": 22, "max": 26 }
     }
+  },
+  "education": {
+    "university_tier": {
+      "options": ["985", "211", "双一流", "一本", "二本", "专科"],
+      "distribution": [0.08, 0.12, 0.15, 0.3, 0.25, 0.1]
+    },
+    "city_tier": {
+      "options": ["一线", "新一线", "二线", "三线"],
+      "distribution": [0.2, 0.35, 0.3, 0.15]
+    },
+    "academic_performance": {
+      "ranking": ["前10%", "10-30%", "30-60%", "后40%"],
+      "distribution": [0.1, 0.2, 0.3, 0.4]
+    },
+    "major": {
+      "理工类": ["计算机科学与技术", "软件工程", "电子信息工程", "通信工程", "机械工程", "土木工程", "数学与应用数学", "物理学", "化学", "生物科学"],
+      "文史哲类": ["汉语言文学", "历史学", "哲学", "英语", "日语"],
+      "经管法类": ["经济学", "金融学", "工商管理", "会计学", "法学"],
+      "艺术类": ["美术学", "视觉传达设计", "音乐学", "舞蹈表演"],
+      "医学类": ["临床医学", "护理学", "药学", "公共卫生"],
+      "其他": ["教育学", "心理学", "新闻传播学"]
+    },
+    "living_situation": {
+      "options": ["4人宿舍", "6人宿舍", "8人宿舍", "校外居住"],
+      "distribution": [0.4, 0.25, 0.25, 0.1]
+    }
+  },
+  "socioeconomic": {
+    "family_income_level": {
+      "options": ["<10万", "10-30万", "30-50万", "50-80万", "80万+"],
+      "distribution": [0.12, 0.43, 0.3, 0.1, 0.05]
+    },
+    "monthly_budget": {
+      "min": 1500,
+      "max": 3000,
+      "segments": [
+        { "range": [1500, 1800], "weight": 0.2 },
+        { "range": [1800, 2200], "weight": 0.35 },
+        { "range": [2200, 2600], "weight": 0.3 },
+        { "range": [2600, 3000], "weight": 0.15 }
+      ]
+    }
+  },
+  "device": {
+    "device_stack": {
+      "options": ["手机", "笔记本", "平板", "耳机", "手表", "主机"],
+      "probability_presence": [1.0, 0.9, 0.5, 0.85, 0.4, 0.05]
+    },
+    "phone": {
+      "华为": [
+        "Mate 80 Pro Max", "Mate 80 Pro", "Mate 80", "Mate 70",
+        "Pura 80 Ultra", "Pura 80 Pro+", "Pura 80 Pro", "Pura 80",
+        "Nova 15 Ultra", "Nova 15 Pro", "Nova 15",
+        "畅想系", "Pocket 3", "华为其他"
+      ],
+      "苹果": [
+        "iPhone 17 Pro", "iPhone 17 Air",
+        "iPhone 16 Pro Max", "iPhone 16 Pro", "iPhone 16", "iPhone 16 Plus",
+        "iPhone 15 Pro Max", "iPhone 15 Pro", "iPhone 15",
+        "iPhone SE4", "苹果其他"
+      ],
+      "小米": [
+        "Xiaomi 17 Ultra", "Xiaomi 17 Pro", "Xiaomi 17",
+        "Xiaomi 15 Ultra", "Xiaomi 15 Pro", "Xiaomi 15",
+        "Redmi"
+      ],
+      "OPPO": ["Find X系", "Find N系", "Reno系", "K系", "A系"],
+      "vivo": ["X系", "S系", "Y系"],
+      "荣耀": ["Magic系", "数字系列", "WIN系"],
+      "其他": ["一加", "iQOO系", "魅族", "三星", "realme"]
+    },
+    "computer": {
+      "options": ["游戏本", "轻薄本"],
+      "distribution": [0.4, 0.6]
+    }
+  },
+  "behavior": {
+    "social_network_size": {
+      "options": ["极少(1-2挚友)", "小圈子(3-5人)", "中型(6-15人)", "广泛(15+)"],
+      "distribution": [0.15, 0.30, 0.35, 0.20]
+    },
+    "relationship": {
+      "options": ["母胎单身", "谈过已分手", "暧昧期", "恋爱中"],
+      "distribution": [0.35, 0.25, 0.15, 0.25]
+    },
+    "screen_time": {
+      "options": ["<3h", "3-6h", "6-9h", "9h+"],
+      "distribution": [0.10, 0.40, 0.40, 0.10]
+    },
+    "short_video": {
+      "label": "短视频",
+      "usage_level": {
+        "options": ["几乎不看", "轻度(<30min/天)", "中度(30-90min/天)", "重度(90min+/天)"],
+        "distribution": [0.10, 0.22, 0.35, 0.33]
+      }
+    },
+    "gaming": {
+      "label": "游戏",
+      "usage_level": {
+        "options": ["完全不玩", "轻度休闲", "中度手游", "重度游戏"],
+        "distribution": [0.30, 0.25, 0.28, 0.17]
+      }
+    },
+    "long_video": {
+      "label": "影视/长视频",
+      "usage_level": {
+        "options": ["几乎不看", "偶尔追剧/电影", "中度(每周几小时)", "重度(每天必看)"],
+        "distribution": [0.18, 0.30, 0.32, 0.20]
+      }
+    },
+    "study_reading": {
+      "label": "学习/阅读",
+      "usage_level": {
+        "options": ["几乎不用手机学习", "偶尔查资料/背单词", "中度(每天固定时段)", "重度(主力学习设备)"],
+        "distribution": [0.20, 0.32, 0.30, 0.18]
+      }
+    },
+    "photo_video": {
+      "label": "拍照/录像",
+      "usage_level": {
+        "options": ["几乎不拍", "偶尔记录", "日常高频拍摄", "创作型用户"],
+        "distribution": [0.15, 0.30, 0.35, 0.20]
+      }
+    },
+    "hobbies": {
+      "options": [
+        "运动健身", "穿搭形象", "学习卷王", "游戏电竞", "影视追剧", "吃喝探店", "旅行户外", "二次元", "读书", "社交/组局"
+      ],
+      "note": "多选，选你平时主要花时间在哪些事上"
+    }
+  },
+  "psychology": {
+    "mbti": {
+      "options": [
+        "ISTJ", "ISFJ", "INFJ", "INTJ",
+        "ISTP", "ISFP", "INFP", "INTP",
+        "ESTP", "ESFP", "ENFP", "ENTP",
+        "ESTJ", "ESFJ", "ENFJ", "ENTJ"
+      ],
+      "distribution": [0.12, 0.14, 0.02, 0.03, 0.05, 0.08, 0.09, 0.04, 0.04, 0.07, 0.08, 0.03, 0.09, 0.13, 0.03, 0.01]
+    },
+    "primary_stressor": {
+      "options": ["学业压力", "就业焦虑", "人际关系", "家庭期望", "经济压力", "外貌焦虑", "存在性迷茫"],
+      "probability_presence": [0.25, 0.22, 0.15, 0.10, 0.08, 0.07, 0.10]
+    }
+  }
 }
