@@ -40,14 +40,14 @@
     },
     "living_situation": {
       "options": ["4人宿舍", "6人宿舍", "8人宿舍", "校外居住"],
-      "distribution": [0.4, 0.25, 0.25, 0.1]
+      "distribution": [0.5, 0.25, 0.15, 0.1]
     }
   },
 
   "socioeconomic": {
     "family_income_level": {
       "options": ["<10万", "10-30万", "30-50万", "50-80万", "80万+"],
-      "distribution": [0.12, 0.43, 0.3, 0.1, 0.05]
+      "distribution": [0.12, 0.50, 0.23, 0.1, 0.05]
     },
     "monthly_budget": {
       "min": 1500,
@@ -64,7 +64,8 @@
   "device": {
     "device_stack": {
       "options": ["手机", "笔记本", "平板", "耳机", "手表", "主机"],
-      "probability_presence": [1.0, 0.9, 0.5, 0.85, 0.4, 0.05]
+      "probability_presence": [1.0, 0.9, 0.5, 0.85, 0.4, 0.05],
+      "note": "服从概率"
     },
     "phone": {
       "华为": [
@@ -95,10 +96,7 @@
       ],
       "note": "多选，最多选3个"
     },
-    "computer": {
-      "options": ["游戏本", "轻薄本"],
-      "distribution": [0.4, 0.6]
-    }
+    "computer": ["游戏本", "轻薄本"]
   },
 
   "behavior": {
@@ -160,7 +158,7 @@
       "probability_presence": [0.80, 0.50, 0.70, 0.60] 
     },
     "ai_usage":{
-      "options":["从未使用", "偶尔问AI", "学习依赖AI","重度AI用户"]
+      "options":["从未使用", "偶尔问AI", "学习依赖AI","重度AI用户"],
       "distribution": [0.01, 0.20, 0.45, 0.34]
     }
   },
@@ -178,15 +176,17 @@
     "life_goal": {
       "options": ["读研", "考公", "就业", "创业", "出国", "暂未确定"],
       "distribution": [0.40, 0.10, 0.35, 0.01, 0.10, 0.09],
-      "note": "研究生不能选读研，有少量人会选择读博"
+      "note": "研究生不能选读研，有少数研究生会选择读博"
     },
     "primary_stressor": {
       "options": ["学业压力", "就业焦虑", "人际关系", "家庭期望", "经济压力", "外貌焦虑", "存在性迷茫"],
-      "probability_presence": [0.25, 0.22, 0.15, 0.10, 0.08, 0.07, 0.10]
+      "probability_presence": [0.25, 0.22, 0.15, 0.10, 0.08, 0.07, 0.10],
+      "note": "服从概率，最多选2个"
     },
     "consumption_psychology": {
       "options": ["实用主义", "品质体验派", "符号消费/身份标识", "情绪消费/悦己", "极简/节省型"],
       "distribution": [0.30, 0.25, 0.15, 0.20, 0.10]
     }
   }
+
 }
