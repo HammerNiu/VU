@@ -57,7 +57,7 @@ def build_questionnaire(questions):
 
     return "\n\n".join(txt)
 
-def ask_qwen(profile, questionnaire_text):
+def ask_qwen(profile, questionnaire_text, total_questions):
 
     system_prompt = f"""
 你是一个真实的大学生，以下是你的个人信息：
@@ -87,19 +87,22 @@ def ask_qwen(profile, questionnaire_text):
 - 回答前后一致
 
 【强制规则】
-
-1. 只输出答案
-2. 不要重复题目
-3. 每行一个答案
-4. 严格按照题目顺序回答
-5. 选择题直接写：
-   A、xxxx
-   或
+1. 问卷共有 {total_questions} 道题。
+   请返回长度必须等于 {total_questions} 的JSON。
+2. 返回合法的JSON对象：
+{{
+  "answers": [
+    "答案1",
+    "答案2",
+    ...
+  ]
+}}
+不要输任何其他内容。
+不要输出```json。
+3. 不要重复问题
+4. 选择题直接写：
    A、xxxx；C、xxxx；F、xxxx
-6. 开放题请写真实自然的大学生表达
-7. 不要编号
-8. 不要解释
-9. 不要空行
+5. 开放题请写真实自然的大学生表达
 """
 
     user_prompt = f"""
@@ -128,19 +131,15 @@ def ask_qwen(profile, questionnaire_text):
 
 def parse_answers(answer_text):
 
-    lines = []
+    answer_text = answer_text.strip()
 
-    for line in answer_text.split("\n"):
+    answer_text = answer_text.replace("```json", "")
+    answer_text = answer_text.replace("```", "")
+    answer_text = answer_text.strip()
 
-        line = line.strip()
+    data = json.loads(answer_text)
 
-        if not line:
-            continue
-
-        lines.append(line)
-
-    return lines
-
+    return data["answers"]
 
 def main():
 
@@ -178,7 +177,8 @@ def main():
 
             answer_text = ask_qwen(
                 profile=student,
-                questionnaire_text=questionnaire_text
+                questionnaire_text=questionnaire_text,
+                total_questions=total_questions
             )
 
             answers = parse_answers(answer_text)
@@ -187,16 +187,10 @@ def main():
                 f"返回答案数: {len(answers)} / {total_questions}"
             )
 
-            # 长度不一致时自动补齐
-            if len(answers) < total_questions:
-
-                answers.extend(
-                    [""] * (total_questions - len(answers))
+            if len(answers) != total_questions:
+                raise ValueError(
+                    f"答案数量异常: {len(answers)} != {total_questions}"
                 )
-
-            elif len(answers) > total_questions:
-
-                answers = answers[:total_questions]
 
             # 写表头
             for ws in wb.worksheets:
