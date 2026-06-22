@@ -1,0 +1,678 @@
+[
+  {
+    "name": "001",
+    "demographic": {
+      "gender": "女",
+      "grade": "大三",
+      "age": 20
+    },
+    "education": {
+      "university_tier": "一本",
+      "city_tier": "新一线",
+      "academic_performance": "30-60%",
+      "major": "计算机科学与技术",
+      "living_situation": "4人宿舍"
+    },
+    "socioeconomic": {
+      "family_income_level": "10-30万",
+      "monthly_budget": 2400
+    },
+    "device": {
+      "device_stack": [
+        "手机",
+        "笔记本",
+        "耳机"
+      ],
+      "phone": {
+        "brand": "华为",
+        "model": "Mate 80"
+      },
+      "purchase_priority": [
+        "拍照/影像",
+        "续航/电池",
+        "外观设计"
+      ],
+      "computer": "轻薄本"
+    },
+    "behavior": {
+      "social_network_size": "中型(6-15人)",
+      "relationship": "母胎单身",
+      "screen_time": "6-9h",
+      "phone_usage": {
+        "short_video": "中度(60-150min/天)",
+        "gaming": "轻度休闲(<60min/天)",
+        "long_video": "偶尔追剧/电影",
+        "study_reading": "中度(每天固定时段)",
+        "photo_video": "日常高频拍摄"
+      },
+      "hobbies": [
+        "运动健身",
+        "摄影",
+        "旅行户外"
+      ],
+      "social_platform": [
+        "微信朋友圈",
+        "B站活跃"
+      ],
+      "ai_usage": "依赖AI"
+    },
+    "psychology": {
+      "mbti": "ENFJ",
+      "life_goal": "读研",
+      "primary_stressor": [
+        "学业压力",
+        "存在性迷茫"
+      ],
+      "consumption_psychology": "品质体验派"
+    }
+  },
+  {
+    "name": "002",
+    "demographic": {
+      "gender": "男",
+      "grade": "大二",
+      "age": 19
+    },
+    "education": {
+      "university_tier": "双一流",
+      "city_tier": "新一线",
+      "academic_performance": "30-60%",
+      "major": "护理学",
+      "living_situation": "6人宿舍"
+    },
+    "socioeconomic": {
+      "family_income_level": "30-50万",
+      "monthly_budget": 2100
+    },
+    "device": {
+      "device_stack": [
+        "手机",
+        "笔记本",
+        "耳机"
+      ],
+      "phone": {
+        "brand": "小米",
+        "model": "Xiaomi 15"
+      },
+      "purchase_priority": [
+        "续航/电池",
+        "价格/性价比",
+        "拍照/影像"
+      ],
+      "computer": "轻薄本"
+    },
+    "behavior": {
+      "social_network_size": "广泛(15+)",
+      "relationship": "暧昧期",
+      "screen_time": "3-6h",
+      "phone_usage": {
+        "short_video": "轻度(<60min/天)",
+        "gaming": "轻度休闲(<60min/天)",
+        "long_video": "偶尔追剧/电影",
+        "study_reading": "中度(依赖手机学习/阅读)",
+        "photo_video": "日常高频拍摄"
+      },
+      "hobbies": [
+        "摄影",
+        "旅行户外",
+        "读书"
+      ],
+      "social_platform": [
+        "微信朋友圈",
+        "小红书活跃",
+        "B站活跃"
+      ],
+      "ai_usage": "依赖AI"
+    },
+    "psychology": {
+      "mbti": "ENFP",
+      "life_goal": "暂未确定",
+      "primary_stressor": [
+        "存在性迷茫",
+        "人际关系"
+      ],
+      "consumption_psychology": "情绪消费/悦己"
+    }
+  },
+  {
+    "name": "003",
+    "demographic": {
+      "gender": "女",
+      "grade": "研究生",
+      "age": 24
+    },
+    "education": {
+      "university_tier": "一本",
+      "city_tier": "新一线",
+      "academic_performance": "30-60%",
+      "major": "计算机科学与技术",
+      "living_situation": "4人宿舍"
+    },
+    "socioeconomic": {
+      "family_income_level": "10-30万",
+      "monthly_budget": 2400
+    },
+    "device": {
+      "device_stack": [
+        "手机",
+        "笔记本",
+        "平板"
+      ],
+      "phone": {
+        "brand": "华为",
+        "model": "Mate 80 Pro"
+      },
+      "purchase_priority": [
+        "续航/电池",
+        "拍照/影像",
+        "系统体验/流畅度"
+      ],
+      "computer": "轻薄本"
+    },
+    "behavior": {
+      "social_network_size": "中型(6-15人)",
+      "relationship": "恋爱中",
+      "screen_time": "6-9h",
+      "phone_usage": {
+        "short_video": "中度(60-150min/天)",
+        "gaming": "轻度休闲(<60min/天)",
+        "long_video": "偶尔追剧/电影",
+        "study_reading": "中度(每天固定时段)",
+        "photo_video": "偶尔记录"
+      },
+      "hobbies": [
+        "运动健身",
+        "摄影",
+        "旅行户外"
+      ],
+      "social_platform": [
+        "微信朋友圈",
+        "小红书活跃"
+      ],
+      "ai_usage": "依赖AI"
+    },
+    "psychology": {
+      "mbti": "ENFJ",
+      "life_goal": "就业",
+      "primary_stressor": [
+        "学业压力",
+        "经济压力"
+      ],
+      "consumption_psychology": "品质体验派"
+    }
+  },
+  {
+    "name": "004",
+    "demographic": {
+      "gender": "女",
+      "grade": "大三",
+      "age": 20
+    },
+    "education": {
+      "university_tier": "双一流",
+      "city_tier": "新一线",
+      "academic_performance": "30-60%",
+      "major": "计算机科学与技术",
+      "living_situation": "4人宿舍"
+    },
+    "socioeconomic": {
+      "family_income_level": "10-30万",
+      "monthly_budget": 2400
+    },
+    "device": {
+      "device_stack": [
+        "手机",
+        "笔记本",
+        "耳机"
+      ],
+      "phone": {
+        "brand": "华为",
+        "model": "Mate 80 Pro"
+      },
+      "purchase_priority": [
+        "拍照/影像",
+        "续航/电池",
+        "外观设计"
+      ],
+      "computer": "轻薄本"
+    },
+    "behavior": {
+      "social_network_size": "中型(6-15人)",
+      "relationship": "母胎单身",
+      "screen_time": "6-9h",
+      "phone_usage": {
+        "short_video": "中度(60-150min/天)",
+        "gaming": "轻度休闲(<60min/天)",
+        "long_video": "偶尔追剧/电影",
+        "study_reading": "中度(每天固定时段)",
+        "photo_video": "日常高频拍摄"
+      },
+      "hobbies": [
+        "运动健身",
+        "摄影",
+        "旅行户外"
+      ],
+      "social_platform": [
+        "微信朋友圈",
+        "小红书活跃"
+      ],
+      "ai_usage": "依赖AI"
+    },
+    "psychology": {
+      "mbti": "ENFJ",
+      "life_goal": "就业",
+      "primary_stressor": [
+        "就业焦虑",
+        "存在性迷茫"
+      ],
+      "consumption_psychology": "品质体验派"
+    }
+  },
+  {
+    "name": "005",
+    "demographic": {
+      "gender": "女",
+      "grade": "大三",
+      "age": 20
+    },
+    "education": {
+      "university_tier": "一本",
+      "city_tier": "新一线",
+      "academic_performance": "后40%",
+      "major": "计算机科学与技术",
+      "living_situation": "4人宿舍"
+    },
+    "socioeconomic": {
+      "family_income_level": "10-30万",
+      "monthly_budget": 2000
+    },
+    "device": {
+      "device_stack": [
+        "手机",
+        "笔记本",
+        "平板",
+        "耳机"
+      ],
+      "phone": {
+        "brand": "华为",
+        "model": "Nova 15"
+      },
+      "purchase_priority": [
+        "续航/电池",
+        "屏幕素质",
+        "拍照/影像"
+      ],
+      "computer": "轻薄本"
+    },
+    "behavior": {
+      "social_network_size": "中型(6-15人)",
+      "relationship": "恋爱中",
+      "screen_time": "6-9h",
+      "phone_usage": {
+        "short_video": "中度(60-150min/天)",
+        "gaming": "轻度休闲(<60min/天)",
+        "long_video": "偶尔追剧/电影",
+        "study_reading": "中度(每天固定时段)",
+        "photo_video": "偶尔记录"
+      },
+      "hobbies": [
+        "运动健身",
+        "二次元",
+        "旅行户外"
+      ],
+      "social_platform": [
+        "微信朋友圈",
+        "B站活跃"
+      ],
+      "ai_usage": "依赖AI"
+    },
+    "psychology": {
+      "mbti": "ENFJ",
+      "life_goal": "读研",
+      "primary_stressor": [
+        "学业压力",
+        "存在性迷茫"
+      ],
+      "consumption_psychology": "品质体验派"
+    }
+  },
+  {
+    "name": "006",
+    "demographic": {
+      "gender": "男",
+      "grade": "大三",
+      "age": 20
+    },
+    "education": {
+      "university_tier": "一本",
+      "city_tier": "新一线",
+      "academic_performance": "30-60%",
+      "major": "历史学",
+      "living_situation": "4人宿舍"
+    },
+    "socioeconomic": {
+      "family_income_level": "10-30万",
+      "monthly_budget": 2000
+    },
+    "device": {
+      "device_stack": [
+        "手机",
+        "笔记本",
+        "耳机"
+      ],
+      "phone": {
+        "brand": "华为",
+        "model": "Mate 80"
+      },
+      "purchase_priority": [
+        "续航/电池",
+        "屏幕素质",
+        "拍照/影像"
+      ],
+      "computer": "轻薄本"
+    },
+    "behavior": {
+      "social_network_size": "中型(6-15人)",
+      "relationship": "母胎单身",
+      "screen_time": "6-9h",
+      "phone_usage": {
+        "short_video": "中度(60-150min/天)",
+        "gaming": "轻度休闲(<60min/天)",
+        "long_video": "偶尔追剧/电影",
+        "study_reading": "中度(每天固定时段)",
+        "photo_video": "偶尔记录"
+      },
+      "hobbies": [
+        "运动健身",
+        "二次元",
+        "旅行户外"
+      ],
+      "social_platform": [
+        "微信朋友圈",
+        "B站活跃"
+      ],
+      "ai_usage": "依赖AI"
+    },
+    "psychology": {
+      "mbti": "ESFJ",
+      "life_goal": "读研",
+      "primary_stressor": [
+        "学业压力",
+        "存在性迷茫"
+      ],
+      "consumption_psychology": "实用主义"
+    }
+  },
+  {
+    "name": "007",
+    "demographic": {
+      "gender": "男",
+      "grade": "大三",
+      "age": 20
+    },
+    "education": {
+      "university_tier": "一本",
+      "city_tier": "新一线",
+      "academic_performance": "30-60%",
+      "major": "历史学",
+      "living_situation": "4人宿舍"
+    },
+    "socioeconomic": {
+      "family_income_level": "10-30万",
+      "monthly_budget": 2400
+    },
+    "device": {
+      "device_stack": [
+        "手机",
+        "笔记本",
+        "耳机"
+      ],
+      "phone": {
+        "brand": "苹果",
+        "model": "iPhone 16 Pro"
+      },
+      "purchase_priority": [
+        "拍照/影像",
+        "系统体验/流畅度",
+        "外观设计"
+      ],
+      "computer": "轻薄本"
+    },
+    "behavior": {
+      "social_network_size": "中型(6-15人)",
+      "relationship": "恋爱中",
+      "screen_time": "6-9h",
+      "phone_usage": {
+        "short_video": "中度(60-150min/天)",
+        "gaming": "轻度休闲(<60min/天)",
+        "long_video": "偶尔追剧/电影",
+        "study_reading": "中度(每天固定时段)",
+        "photo_video": "偶尔记录"
+      },
+      "hobbies": [
+        "运动健身",
+        "游戏电竞",
+        "摄影"
+      ],
+      "social_platform": [
+        "微信朋友圈",
+        "B站活跃"
+      ],
+      "ai_usage": "依赖AI"
+    },
+    "psychology": {
+      "mbti": "ENFJ",
+      "life_goal": "读研",
+      "primary_stressor": [
+        "学业压力",
+        "存在性迷茫"
+      ],
+      "consumption_psychology": "实用主义"
+    }
+  },
+  {
+    "name": "008",
+    "demographic": {
+      "gender": "女",
+      "grade": "大三",
+      "age": 20
+    },
+    "education": {
+      "university_tier": "双一流",
+      "city_tier": "二线",
+      "academic_performance": "30-60%",
+      "major": "计算机科学与技术",
+      "living_situation": "6人宿舍"
+    },
+    "socioeconomic": {
+      "family_income_level": "30-50万",
+      "monthly_budget": 2400
+    },
+    "device": {
+      "device_stack": [
+        "手机",
+        "笔记本",
+        "耳机",
+        "手表"
+      ],
+      "phone": {
+        "brand": "小米",
+        "model": "Xiaomi 15"
+      },
+      "purchase_priority": [
+        "续航/电池",
+        "价格/性价比",
+        "AI功能"
+      ],
+      "computer": "游戏本"
+    },
+    "behavior": {
+      "social_network_size": "广泛(15+)",
+      "relationship": "暧昧期",
+      "screen_time": "6-9h",
+      "phone_usage": {
+        "short_video": "中度(60-150min/天)",
+        "gaming": "轻度休闲(<60min/天)",
+        "long_video": "偶尔追剧/电影",
+        "study_reading": "中度(依赖手机学习/阅读)",
+        "photo_video": "日常高频拍摄"
+      },
+      "hobbies": [
+        "摄影",
+        "游戏电竞",
+        "旅行户外"
+      ],
+      "social_platform": [
+        "微信朋友圈",
+        "小红书活跃",
+        "B站活跃"
+      ],
+      "ai_usage": "依赖AI"
+    },
+    "psychology": {
+      "mbti": "INTP",
+      "life_goal": "就业",
+      "primary_stressor": [
+        "就业焦虑",
+        "存在性迷茫"
+      ],
+      "consumption_psychology": "实用主义"
+    }
+  },
+  {
+    "name": "009",
+    "demographic": {
+      "gender": "女",
+      "grade": "大三",
+      "age": 20
+    },
+    "education": {
+      "university_tier": "一本",
+      "city_tier": "新一线",
+      "academic_performance": "30-60%",
+      "major": "计算机科学与技术",
+      "living_situation": "4人宿舍"
+    },
+    "socioeconomic": {
+      "family_income_level": "10-30万",
+      "monthly_budget": 2500
+    },
+    "device": {
+      "device_stack": [
+        "手机",
+        "笔记本",
+        "平板",
+        "耳机"
+      ],
+      "phone": {
+        "brand": "华为",
+        "model": "Mate 80"
+      },
+      "purchase_priority": [
+        "拍照/影像",
+        "续航/电池",
+        "外观设计"
+      ],
+      "computer": "轻薄本"
+    },
+    "behavior": {
+      "social_network_size": "中型(6-15人)",
+      "relationship": "母胎单身",
+      "screen_time": "6-9h",
+      "phone_usage": {
+        "short_video": "中度(60-150min/天)",
+        "gaming": "轻度休闲(<60min/天)",
+        "long_video": "偶尔追剧/电影",
+        "study_reading": "中度(每天固定时段)",
+        "photo_video": "日常高频拍摄"
+      },
+      "hobbies": [
+        "运动健身",
+        "摄影",
+        "吃喝探店"
+      ],
+      "social_platform": [
+        "微信朋友圈",
+        "小红书活跃"
+      ],
+      "ai_usage": "依赖AI"
+    },
+    "psychology": {
+      "mbti": "ENFJ",
+      "life_goal": "读研",
+      "primary_stressor": [
+        "学业压力",
+        "存在性迷茫"
+      ],
+      "consumption_psychology": "品质体验派"
+    }
+  },
+  {
+    "name": "010",
+    "demographic": {
+      "gender": "女",
+      "grade": "大三",
+      "age": 20
+    },
+    "education": {
+      "university_tier": "211",
+      "city_tier": "新一线",
+      "academic_performance": "30-60%",
+      "major": "计算机科学与技术",
+      "living_situation": "4人宿舍"
+    },
+    "socioeconomic": {
+      "family_income_level": "10-30万",
+      "monthly_budget": 2500
+    },
+    "device": {
+      "device_stack": [
+        "手机",
+        "笔记本",
+        "耳机",
+        "手表"
+      ],
+      "phone": {
+        "brand": "华为",
+        "model": "Mate 80 Pro"
+      },
+      "purchase_priority": [
+        "拍照/影像",
+        "系统体验/流畅度",
+        "外观设计"
+      ],
+      "computer": "轻薄本"
+    },
+    "behavior": {
+      "social_network_size": "中型(6-15人)",
+      "relationship": "恋爱中",
+      "screen_time": "6-9h",
+      "phone_usage": {
+        "short_video": "中度(60-150min/天)",
+        "gaming": "轻度休闲(<60min/天)",
+        "long_video": "偶尔追剧/电影",
+        "study_reading": "中度(每天固定时段)",
+        "photo_video": "偶尔记录"
+      },
+      "hobbies": [
+        "运动健身",
+        "学习卷王",
+        "吃喝探店"
+      ],
+      "social_platform": [
+        "微信朋友圈",
+        "小红书活跃"
+      ],
+      "ai_usage": "依赖AI"
+    },
+    "psychology": {
+      "mbti": "ESFJ",
+      "life_goal": "就业",
+      "primary_stressor": [
+        "就业焦虑",
+        "存在性迷茫"
+      ],
+      "consumption_psychology": "品质体验派"
+    }
+  }
+]
