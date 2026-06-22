@@ -68,27 +68,30 @@
       "note": "服从概率"
     },
     "phone": {
-      "华为": [
-        "Mate 80 Pro Max", "Mate 80 Pro", "Mate 80", "Mate 70",
-        "Pura 80 Ultra", "Pura 80 Pro+", "Pura 80 Pro", "Pura 80",
-        "Nova 15 Ultra", "Nova 15 Pro", "Nova 15",
-        "畅想系列", "Pocket 3", "华为其他"
-      ],
-      "苹果": [
-        "iPhone 17 Pro", "iPhone 17 Air",
-        "iPhone 16 Pro Max", "iPhone 16 Pro", "iPhone 16", "iPhone 16 Plus",
-        "iPhone 15 Pro Max", "iPhone 15 Pro", "iPhone 15",
-        "iPhone SE4", "苹果其他"
-      ],
-      "小米": [
-        "Xiaomi 17 Ultra", "Xiaomi 17 Pro", "Xiaomi 17",
-        "Xiaomi 15 Ultra", "Xiaomi 15 Pro", "Xiaomi 15",
-        "Redmi"
-      ],
-      "OPPO": ["Find X系", "Find N系", "Reno系", "K系", "A系"],
-      "vivo": ["X系", "S系", "Y系"],
-      "荣耀": ["Magic系", "数字系列", "WIN系"],
-      "其他": ["一加", "iQOO系", "魅族", "三星", "realme"]
+      "brand": {
+        "options": ["华为", "苹果", "小米", "OPPO", "vivo", "荣耀", "其他"],
+        "distribution": [0.30, 0.30, 0.10, 0.10, 0.10, 0.05, 0.05],
+        "note":"严格按照给定的概率分布进行随机抽取"
+      },
+      "model": {
+        "华为": [
+          "Mate 80 Pro Max", "Mate 80 Pro", "Mate 80", "Mate 70",
+          "Pura 80 Ultra", "Pura 80 Pro+", "Pura 80 Pro", "Pura 80",
+          "Nova 15 Ultra", "Nova 15 Pro", "Nova 15",
+          "畅想系列", "Pocket 3", "华为其他"
+        ],
+        "苹果": [
+          "iPhone 17 Pro", "iPhone 17 Air",
+          "iPhone 16 Pro Max", "iPhone 16 Pro", "iPhone 16", "iPhone 16 Plus",
+          "iPhone 15 Pro Max", "iPhone 15 Pro", "iPhone 15",
+          "iPhone SE4", "苹果其他"
+        ],
+        "小米": ["Xiaomi 17 Ultra", "Xiaomi 17 Pro", "Xiaomi 17", "Xiaomi 15"],
+        "OPPO": ["Find X系", "Reno系", "K系", "A系"],
+        "vivo": ["X系", "S系", "Y系"],
+        "荣耀": ["Magic系", "数字系列", "WIN系"],
+        "其他": ["一加", "iQOO系", "魅族", "三星", "realme"]
+      }
     },
     "purchase_priority": {
       "options": [
@@ -112,44 +115,46 @@
       "options": ["<3h", "3-6h", "6-9h", "9h+"],
       "distribution": [0.10, 0.40, 0.40, 0.10]
     },
-    "short_video": {
-      "label": "短视频",
-      "usage_level": {
-        "options": ["几乎不看", "轻度(<30min/天)", "中度(30-90min/天)", "重度(90min+/天)"],
-        "distribution": [0.10, 0.22, 0.35, 0.33]
-      }
-    },
-    "gaming": {
-      "label": "游戏",
-      "usage_level": {
-        "options": ["完全不玩", "轻度休闲", "中度手游", "重度游戏"],
-        "distribution": [0.30, 0.25, 0.28, 0.17]
-      }
-    },
-    "long_video": {
-      "label": "影视/长视频",
-      "usage_level": {
-        "options": ["几乎不看", "偶尔追剧/电影", "中度(每周几小时)", "重度(每天必看)"],
-        "distribution": [0.18, 0.30, 0.32, 0.20]
-      }
-    },
-    "study_reading": {
-      "label": "学习/阅读",
-      "usage_level": {
-        "options": ["几乎不用手机学习", "偶尔查资料/背单词", "中度(每天固定时段)", "重度(主力学习设备)"],
-        "distribution": [0.20, 0.32, 0.30, 0.18]
-      }
-    },
-    "photo_video": {
-      "label": "拍照/录像",
-      "usage_level": {
-        "options": ["几乎不拍", "偶尔记录", "日常高频拍摄", "创作型用户"],
-        "distribution": [0.15, 0.30, 0.35, 0.20]
+    "phone_usage":{
+      "short_video": {
+        "label": "短视频",
+        "usage_level": {
+          "options": ["几乎不看", "轻度(<60min/天)", "中度(60-150min/天)", "重度(150min+/天)"],
+          "distribution": [0.10, 0.20, 0.50, 0.20]
+        }
+      },
+      "gaming": {
+        "label": "游戏",
+        "usage_level": {
+          "options": ["完全不玩", "轻度休闲(<60min/天)", "中度游戏(60-150min/天)", "重度游戏(150min+/天)"],
+          "distribution": [0.30, 0.25, 0.28, 0.17]
+        }
+      },
+      "long_video": {
+        "label": "影视/长视频",
+        "usage_level": {
+          "options": ["几乎不看", "偶尔追剧/电影", "中度(每周几小时)", "重度(每天必看)"],
+          "distribution": [0.18, 0.30, 0.32, 0.20]
+        }
+      },
+      "study_reading": {
+        "label": "学习/阅读",
+        "usage_level": {
+          "options": ["几乎不用手机学习", "偶尔查资料/背单词", "中度(依赖手机学习/阅读)", "重度(手机主要用来学习/阅读)"],
+          "distribution": [0.20, 0.50, 0.25, 0.05]
+        }
+      },
+      "photo_video": {
+        "label": "拍照/录像",
+        "usage_level": {
+          "options": ["几乎不拍", "偶尔记录", "日常高频拍摄", "创作型用户"],
+          "distribution": [0.15, 0.30, 0.35, 0.20]
+        }
       }
     },
     "hobbies": {
       "options": [
-        "运动健身", "形象管理", "学习卷王", "游戏电竞", "影视追剧", "吃喝探店", "旅行户外", "二次元", "读书", "社交/组局"
+        "运动健身", "形象管理", "学习卷王", "游戏电竞", "影视追剧","摄影", "吃喝探店", "旅行户外", "二次元", "读书", "社交/组局"
       ],
       "note": "多选，最多选3个"
     },
@@ -158,7 +163,7 @@
       "probability_presence": [0.80, 0.50, 0.70, 0.60] 
     },
     "ai_usage":{
-      "options":["从未使用", "偶尔问AI", "学习依赖AI","重度AI用户"],
+      "options":["从未使用", "偶尔问AI", "依赖AI","重度AI用户"],
       "distribution": [0.01, 0.20, 0.45, 0.34]
     }
   },
@@ -174,9 +179,22 @@
       "distribution": [0.12, 0.14, 0.02, 0.03, 0.05, 0.08, 0.09, 0.04, 0.04, 0.07, 0.08, 0.03, 0.09, 0.13, 0.03, 0.01]
     },
     "life_goal": {
-      "options": ["读研", "考公", "就业", "创业", "出国", "暂未确定"],
-      "distribution": [0.40, 0.10, 0.35, 0.01, 0.10, 0.09],
-      "note": "研究生不能选读研，有少数研究生会选择读博"
+      "大一_大二": {
+        "options": ["读研", "考公", "就业", "创业", "出国", "暂未确定"],
+        "distribution": [0.25, 0.06, 0.25, 0.04, 0.10, 0.30]
+      },
+      "大三_大四": {
+        "options": ["读研", "考公", "就业", "创业", "出国", "暂未确定"],
+        "distribution": [0.40, 0.10, 0.30, 0.02, 0.10, 0.08]
+      },
+      "研究生": {
+        "options": ["读博", "考公", "就业", "创业", "出国","暂未确定"],
+        "distribution": [0.25, 0.10, 0.35, 0.02, 0.08, 0.20]
+      },
+      "考研二战备战中": {
+        "options": ["读研"],
+        "distribution": [1.0]
+      }
     },
     "primary_stressor": {
       "options": ["学业压力", "就业焦虑", "人际关系", "家庭期望", "经济压力", "外貌焦虑", "存在性迷茫"],
