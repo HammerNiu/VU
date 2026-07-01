@@ -120,18 +120,10 @@ def generate_detail(student: Dict[str, Any]) -> Dict[str, Any]:
             response = CLIENT.chat.completions.create(
                 model="Qwen3-32B",
                 messages=[
-                    {
-                        "role": "system",
-                        "content": "你是一个准确、严谨的 JSON 生成器，只输出 JSON，不输出任何解释。"
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
+                    {"role": "system","content": "你是一个准确、严谨的 JSON 生成器，只输出 JSON，不输出任何解释。"},
+                    {"role": "user","content": prompt}
                 ],
-                temperature=0.5,
-                max_tokens=2048,
-                response_format={"type": "json_object"}
+                temperature=0.5
             )
 
             raw = response.choices[0].message.content
