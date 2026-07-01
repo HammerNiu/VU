@@ -3,12 +3,6 @@ import time
 from openai import OpenAI
 from typing import List, Dict, Any
 
-CLIENT = OpenAI(
-    api_key="token-abc123",
-    base_url="http://100.102.218.124:3236/v1"
-)
-
-MODEL = "Qwen3-32B" 
 
 INPUT_FILE = "/home/n50059067/Vman/students.json"
 OUTPUT_FILE = "student_detail.json"
@@ -58,44 +52,45 @@ DETAIL_PROMPT = """
 - 整体风格与画像中的"品质体验派""ENFJ""考研目标"等特质一致
 """
 
+def load_json(path):
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
 
-def load_students(filepath: str) -> List[Dict[str, Any]]:
-    """加载 student.json，支持两种格式：列表 或 单对象"""
-    with open(filepath, 'r', encoding='utf-8') as f:
-        data = json.load(f)
-    if isinstance(data, list):
-        return data
-    elif isinstance(data, dict):
-        return [data]
-    else:
-        raise ValueError("student.json 格式错误，应为 JSON 数组或对象")
+def clean_and_parse(raw):
+    raw = raw.strip()
+    if raw.startswith("```json"):
+        raw = raw[7:]
+    if raw.startswith("```"):
+        raw = raw[3:]
+    if raw.endswith("```"):
+        raw = raw[:-3]
+    return json.loads(raw.strip())
 
 
 def generate_detail(student: Dict[str, Any]) -> Dict[str, Any]:
     """调用 LLM 为单个学生生成补充细节"""
-    prompt = DETAIL_PROMPT.format(
-        student_json=json.dumps(student, ensure_ascii=False, indent=2)
+    students_json = load_json(INPUT_FILE)
+    student_json = json.dumps(students_json, ensure_ascii=False)
+    
+    client = OpenAI(
+        api_key="token-abc123",
+        base_url="http://100.102.218.124:3236/v1"
     )
     
-    response = CLIENT.chat.completions.create(
-        model=MODEL,
+    response = client.chat.completions.create(
+        model="Qwen3-32B" ,
         messages=[
             {"role": "system", "content": "你是一个准确、细致的JSON生成器，只输出JSON格式内容。"},
-            {"role": "user", "content": prompt}
+            {"role": "user", "content": student_json}
         ],
         temperature=0.7,
         max_tokens=2048
     )
     
-    raw = response.choices[0].message.content.strip()
+    raw = response.choices[0].message.content
+    detail_json = clean_and_parse(raw)
     
-    # 尝试提取 JSON（处理可能的 markdown 包裹）
-    if "```json" in raw:
-        raw = raw.split("```json")[1].split("```")[0].strip()
-    elif "```" in raw:
-        raw = raw.split("```")[1].split("```")[0].strip()
-    
-    return json.loads(raw)
+    return  detail_json
 
 
 def main():
@@ -108,7 +103,6 @@ def main():
         print(f"\n🔄 正在处理第 {idx+1}/{len(students)} 条...")
         try:
             detail = generate_detail(student)
-            # 合并原始数据 + 补充细节
             enriched = {**student, **detail}
             results.append(enriched)
             print(f"   ✅ 完成：{detail.get('university', '未知大学')} | {detail.get('city', '未知城市')}")
