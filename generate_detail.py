@@ -10,69 +10,117 @@ OUTPUT_FILE = "student_detail.json"
 SLEEP_INTERVAL = 2
 
 DETAIL_PROMPT = """
-你是一个专为中国大学生群体设计的人物画像生成引擎。请根据以下学生画像，补充该角色的具体生活细节。
+你是一个专为中国大学生群体设计的人物画像生成引擎。请根据下面提供的学生画像，补充该角色的生活细节。
 
 【原始画像】
+
 {student_json}
 
-【需要补充的字段及要求】
+【需要补充的字段】
 
-1. "city"
-该学生目前所在的城市（需与画像中的 "city_tier" 匹配），只输出城市名。
-
-2. "university"
-该学生就读的大学（需与 education 中的 university_tier 和 city_tier 对应，必须是真实存在的中国高校，不允许虚构），只输出大学全称。
-
-3. "recent_social_posts"
-最近3条朋友圈/小红书/抖音内容（需与画像中的 social_platform 匹配），每条包含：
-- platform
-- content
-- images（简短图片描述）
-
-4. "relationships"
-包含：
-   - "parents": 与父母的关系描述（含频率、内容、核心冲突或默契点）
-   - "friends": 与核心朋友的关系描述（含人数、相处模式、聊天内容）
-   - "partner": 与恋人的关系描述（含相处节奏、核心张力；若画像中无恋爱关系则写"无"）
-   - "roommates": 与室友的关系描述（含人数、各自状态、宿舍氛围）
-
+1. city
+表示该学生目前所在城市。
 要求：
-- 尽量简洁
-- 不要过度发挥
-- 保持人物设定一致
-- 所有字段必须填写
-- 不允许输出 null、空字符串
-- 如果无法确定，请生成最合理、最符合现实的内容
+- 必须符合画像中的 city_tier。
+- 必须是真实存在的中国城市。
+- 只输出城市名称。
+- 如果存在多个符合条件的城市，请不要总是选择成都、杭州、武汉等热门城市，应尽量均匀分布到不同城市。
+
+2. university
+表示该学生目前就读大学。
+要求：
+- 必须是真实存在的中国高校。
+- 不允许编造学校名称。
+- 必须符合画像中的 education.university_tier。
+- 应与所在城市尽量对应；若该城市没有符合条件的高校，可选择同省或同等级城市。
+- 当存在多个合理学校时，应尽量选择不同高校，不要反复选择四川大学、电子科技大学、浙江大学、武汉大学等少数热门学校。
+- 不要为了知名度优先选择985高校，应严格按照 university_tier 进行匹配。
+- 只输出大学全称。
+
+3. recent_social_posts
+生成最近3条社交平台内容。
+要求：
+- 平台必须符合画像中的 social_platform。
+- 每条包括：
+    - platform
+    - content
+    - images
+- 内容自然真实。
+- 不要刻意鸡汤。
+- 不要所有人都发考研、咖啡、图书馆。
+- 图片描述保持简洁。
+
+4. relationships
+包括：
+parents
+描述：
+- 联系频率
+- 日常聊天内容
+- 默契或冲突
+friends
+描述：
+- 核心朋友人数
+- 相处模式
+- 平时聊天内容
+partner
+描述：
+- 若画像没有恋爱关系，直接写："无"
+- 若有恋爱关系，描述相处节奏和主要矛盾。
+roommates
+描述：
+- 室友人数
+- 各自特点
+- 宿舍氛围
+
+【整体要求】
+
+- 保持与画像设定一致。
+- 不要新增设定。
+- 尽量简洁。
+- 不要写成长篇小说。
+- 所有字段必须填写。
+- 不允许输出 null。
+- 不允许输出空字符串。
+- 不允许输出"未知""待补充"等内容。
+- 如果存在多个合理答案，请优先选择更少出现的城市、高校和生活方式，而不是重复热门答案。
+- 这是一个用于生成大量学生画像的数据集，应尽量保证不同学生之间具有多样性，避免模式化生成。
+
 
 【输出格式】
 
-严格输出 JSON，不允许输出任何解释。
+严格输出 JSON。
+
+不要输出 markdown。
+
+不要输出解释。
+
+不要输出任何多余文字。
 
 {
-  "city":"xxx",
-  "university":"xxx",
-  "recent_social_posts":[
+  "city": "xxx",
+  "university": "xxx",
+  "recent_social_posts": [
     {
-      "platform":"朋友圈",
-      "content":"xxx",
-      "images":"xxx"
+      "platform": "朋友圈",
+      "content": "xxx",
+      "images": "xxx"
     },
     {
-      "platform":"小红书",
-      "content":"xxx",
-      "images":"xxx"
+      "platform": "小红书",
+      "content": "xxx",
+      "images": "xxx"
     },
     {
-      "platform":"抖音",
-      "content":"xxx",
-      "images":"xxx"
+      "platform": "抖音",
+      "content": "xxx",
+      "images": "xxx"
     }
   ],
-  "relationships":{
-    "parents":"xxx",
-    "friends":"xxx",
-    "partner":"xxx",
-    "roommates":"xxx"
+  "relationships": {
+    "parents": "xxx",
+    "friends": "xxx",
+    "partner": "xxx",
+    "roommates": "xxx"
   }
 }
 """
@@ -212,12 +260,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-(Vman) n50059067@M2404001039:~/Vman$ python generate_detail.py
-📂 读取 /home/n50059067/Vman/students.json
-✅ 共 10 条学生画像
-
-🔄 正在处理 1/10
-   ❌ 失败：'\n  "city"'
-
-🔄 正在处理 2/10
-   ❌ 失败：'\n  "city"'
