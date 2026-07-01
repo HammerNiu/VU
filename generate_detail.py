@@ -4,21 +4,9 @@ import re
 from typing import List, Dict, Any
 from openai import OpenAI
 
-# =========================
-# 配置
-# =========================
-CLIENT = OpenAI(
-    api_key="token-abc123",
-    base_url="http://100.102.218.124:3236/v1",
-    timeout=120,
-)
-
-MODEL = "Qwen3-32B"
-
 INPUT_FILE = "/home/n50059067/Vman/students.json"
 OUTPUT_FILE = "student_detail.json"
 
-# 每处理一条休息（秒）
 SLEEP_INTERVAL = 2
 
 DETAIL_PROMPT = """
@@ -43,21 +31,12 @@ DETAIL_PROMPT = """
 
 4. "relationships"
 包含：
-
-parents：
-与父母关系（联系频率、聊天内容、核心冲突或默契）
-
-friends：
-与核心朋友关系（人数、相处模式、聊天内容）
-
-partner：
-与恋人的关系（若无恋爱则写"无"）
-
-roommates：
-与室友关系（人数、宿舍氛围、各自状态）
+   - "parents": 与父母的关系描述（含频率、内容、核心冲突或默契点）
+   - "friends": 与核心朋友的关系描述（含人数、相处模式、聊天内容）
+   - "partner": 与恋人的关系描述（含相处节奏、核心张力；若画像中无恋爱关系则写"无"）
+   - "roommates": 与室友的关系描述（含人数、各自状态、宿舍氛围）
 
 要求：
-
 - 尽量简洁
 - 不要过度发挥
 - 保持人物设定一致
@@ -84,7 +63,7 @@ roommates：
       "images":"xxx"
     },
     {
-      "platform":"朋友圈",
+      "platform":"抖音",
       "content":"xxx",
       "images":"xxx"
     }
@@ -98,56 +77,29 @@ roommates：
 }
 """
 
-
-# =========================
-# 工具函数
-# =========================
 def load_students(filepath: str) -> List[Dict[str, Any]]:
     """支持 JSON 数组或单个对象"""
-
     with open(filepath, "r", encoding="utf-8") as f:
         data = json.load(f)
-
     if isinstance(data, list):
         return data
-
     if isinstance(data, dict):
         return [data]
-
     raise ValueError("输入 JSON 格式错误，应为对象或数组。")
 
 
-def extract_json(text: str) -> Dict[str, Any]:
-    """尽可能从模型输出中提取 JSON"""
-
-    text = text.strip()
-
-    # 去掉 think
-    text = re.sub(r"<think>.*?</think>", "", text, flags=re.S)
-
-    # 去 markdown
-    if "```json" in text:
-        text = text.split("```json", 1)[1].split("```", 1)[0]
-    elif "```" in text:
-        text = text.split("```", 1)[1].split("```", 1)[0]
-
-    text = text.strip()
-
-    # 找第一个 {
-    start = text.find("{")
-    end = text.rfind("}")
-
-    if start == -1 or end == -1:
-        raise ValueError("模型未返回 JSON")
-
-    text = text[start:end + 1]
-
-    return json.loads(text)
+def extract_json(raw):
+    raw = raw.strip()
+    if raw.startswith("```json"):
+        raw = raw[7:]
+    if raw.startswith("```"):
+        raw = raw[3:]
+    if raw.endswith("```"):
+        raw = raw[:-3]
+    return json.loads(raw.strip())
 
 
 def generate_detail(student: Dict[str, Any]) -> Dict[str, Any]:
-    """生成单个学生补充信息"""
-
     prompt = DETAIL_PROMPT.format(
         student_json=json.dumps(
             student,
@@ -156,14 +108,17 @@ def generate_detail(student: Dict[str, Any]) -> Dict[str, Any]:
         )
     )
 
+    CLIENT = OpenAI(
+    api_key="token-abc123",
+    base_url="http://100.102.218.124:3236/v1",
+    )    
+
     last_error = None
 
     for retry in range(3):
-
         try:
-
             response = CLIENT.chat.completions.create(
-                model=MODEL,
+                model="Qwen3-32B",
                 messages=[
                     {
                         "role": "system",
@@ -174,7 +129,7 @@ def generate_detail(student: Dict[str, Any]) -> Dict[str, Any]:
                         "content": prompt
                     }
                 ],
-                temperature=0.3,
+                temperature=0.5,
                 max_tokens=2048,
                 response_format={"type": "json_object"}
             )
@@ -193,9 +148,6 @@ def generate_detail(student: Dict[str, Any]) -> Dict[str, Any]:
     raise RuntimeError(last_error)
 
 
-# =========================
-# 主程序
-# =========================
 def main():
 
     print(f"📂 读取 {INPUT_FILE}")
