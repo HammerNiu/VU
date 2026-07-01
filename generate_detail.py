@@ -1,13 +1,24 @@
 import json
 import time
-from openai import OpenAI
+import re
 from typing import List, Dict, Any
+from openai import OpenAI
 
+# =========================
+# 配置
+# =========================
+CLIENT = OpenAI(
+    api_key="token-abc123",
+    base_url="http://100.102.218.124:3236/v1",
+    timeout=120,
+)
+
+MODEL = "Qwen3-32B"
 
 INPUT_FILE = "/home/n50059067/Vman/students.json"
 OUTPUT_FILE = "student_detail.json"
 
-# 每处理一条休息 2 秒，避免触发限流
+# 每处理一条休息（秒）
 SLEEP_INTERVAL = 2
 
 DETAIL_PROMPT = """
@@ -17,99 +28,211 @@ DETAIL_PROMPT = """
 {student_json}
 
 【需要补充的字段及要求】
-1. "city": 该学生目前所在的城市（需与画像中""city_tier"匹配），只输出城市名
-2. "university": 该学生就读的大学（需与"education"中的 "university_tier"和"city_tier"对应，必须符合事实，不能胡编乱造），只输出大学全称
-3. "recent_social_posts": 最近3条朋友圈/小红书/抖音内容（需与画像中"social_platform"匹配）每条包含"platform"、"content"、"images"(简短的图片描述)
-4. "relationships": 包含以下子字段：
-   - "parents": 与父母的关系描述（含频率、内容、核心冲突或默契点）
-   - "friends": 与核心朋友的关系描述（含人数、相处模式、聊天内容）
-   - "partner": 与恋人的关系描述（含相处节奏、核心张力；若画像中无恋爱关系则写"无"）
-   - "roommates": 与室友的关系描述（含人数、各自状态、宿舍氛围）
-5. 尽量简洁，别随意发挥
+
+1. "city"
+该学生目前所在的城市（需与画像中的 "city_tier" 匹配），只输出城市名。
+
+2. "university"
+该学生就读的大学（需与 education 中的 university_tier 和 city_tier 对应，必须是真实存在的中国高校，不允许虚构），只输出大学全称。
+
+3. "recent_social_posts"
+最近3条朋友圈/小红书/抖音内容（需与画像中的 social_platform 匹配），每条包含：
+- platform
+- content
+- images（简短图片描述）
+
+4. "relationships"
+包含：
+
+parents：
+与父母关系（联系频率、聊天内容、核心冲突或默契）
+
+friends：
+与核心朋友关系（人数、相处模式、聊天内容）
+
+partner：
+与恋人的关系（若无恋爱则写"无"）
+
+roommates：
+与室友关系（人数、宿舍氛围、各自状态）
+
+要求：
+
+- 尽量简洁
+- 不要过度发挥
+- 保持人物设定一致
+- 所有字段必须填写
+- 不允许输出 null、空字符串
+- 如果无法确定，请生成最合理、最符合现实的内容
 
 【输出格式】
-请严格输出 JSON 格式，不要有任何额外文字。格式如下：
+
+严格输出 JSON，不允许输出任何解释。
+
 {
-  "city": "xxx",
-  "university": "xxx",
-  "recent_social_posts": [
-    {"platform": "朋友圈", "content": "xxx", "images": "xxx"},
-    {"platform": "小红书", "content": "xxx", "images": "xxx"},
-    {"platform": "朋友圈", "content": "xxx", "images": "xxx"}
+  "city":"xxx",
+  "university":"xxx",
+  "recent_social_posts":[
+    {
+      "platform":"朋友圈",
+      "content":"xxx",
+      "images":"xxx"
+    },
+    {
+      "platform":"小红书",
+      "content":"xxx",
+      "images":"xxx"
+    },
+    {
+      "platform":"朋友圈",
+      "content":"xxx",
+      "images":"xxx"
+    }
   ],
-  "relationships": {
-    "parents": "xxx",
-    "friends": "xxx",
-    "partner": "xxx",
-    "roommates": "xxx"
+  "relationships":{
+    "parents":"xxx",
+    "friends":"xxx",
+    "partner":"xxx",
+    "roommates":"xxx"
   }
 }
-
-请确保：
-- 城市、大学、家乡的选择符合画像中的地域层级要求
-- 社交媒体内容自然、真实，不刻意
-- 关系描述有具体细节、矛盾和张力，不是泛泛而谈
-- 整体风格与画像中的"品质体验派""ENFJ""考研目标"等特质一致
 """
 
-def load_json(path):
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
 
-def clean_and_parse(raw):
-    raw = raw.strip()
-    if raw.startswith("```json"):
-        raw = raw[7:]
-    if raw.startswith("```"):
-        raw = raw[3:]
-    if raw.endswith("```"):
-        raw = raw[:-3]
-    return json.loads(raw.strip())
+# =========================
+# 工具函数
+# =========================
+def load_students(filepath: str) -> List[Dict[str, Any]]:
+    """支持 JSON 数组或单个对象"""
+
+    with open(filepath, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    if isinstance(data, list):
+        return data
+
+    if isinstance(data, dict):
+        return [data]
+
+    raise ValueError("输入 JSON 格式错误，应为对象或数组。")
+
+
+def extract_json(text: str) -> Dict[str, Any]:
+    """尽可能从模型输出中提取 JSON"""
+
+    text = text.strip()
+
+    # 去掉 think
+    text = re.sub(r"<think>.*?</think>", "", text, flags=re.S)
+
+    # 去 markdown
+    if "```json" in text:
+        text = text.split("```json", 1)[1].split("```", 1)[0]
+    elif "```" in text:
+        text = text.split("```", 1)[1].split("```", 1)[0]
+
+    text = text.strip()
+
+    # 找第一个 {
+    start = text.find("{")
+    end = text.rfind("}")
+
+    if start == -1 or end == -1:
+        raise ValueError("模型未返回 JSON")
+
+    text = text[start:end + 1]
+
+    return json.loads(text)
 
 
 def generate_detail(student: Dict[str, Any]) -> Dict[str, Any]:
-    """调用 LLM 为单个学生生成补充细节"""
-    students_json = load_json(INPUT_FILE)
-    student_json = json.dumps(students_json, ensure_ascii=False)
-    
-    client = OpenAI(
-        api_key="token-abc123",
-        base_url="http://100.102.218.124:3236/v1"
-    )
-    
-    response = client.chat.completions.create(
-        model="Qwen3-32B" ,
-        messages=[
-            {"role": "system", "content": "你是一个准确、细致的JSON生成器，只输出JSON格式内容。"},
-            {"role": "user", "content": student_json}
-        ],
-        temperature=0.7,
-        max_tokens=2048
-    )
-    
-    raw = response.choices[0].message.content
-    detail_json = clean_and_parse(raw)
-    
-    return  detail_json
+    """生成单个学生补充信息"""
 
+    prompt = DETAIL_PROMPT.format(
+        student_json=json.dumps(
+            student,
+            ensure_ascii=False,
+            indent=2
+        )
+    )
 
-def main():
-    print(f"📂 读取 {INPUT_FILE}...")
-    students = load_json(INPUT_FILE)
-    print(f"✅ 共 {len(students)} 条学生画像")
-    
-    results = []
-    for idx, student in enumerate(students):
-        print(f"\n🔄 正在处理第 {idx+1}/{len(students)} 条...")
+    last_error = None
+
+    for retry in range(3):
+
         try:
-            detail = generate_detail(student)
-            enriched = {**student, **detail}
-            results.append(enriched)
-            print(f"   ✅ 完成：{detail.get('university', '未知大学')} | {detail.get('city', '未知城市')}")
+
+            response = CLIENT.chat.completions.create(
+                model=MODEL,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "你是一个准确、严谨的 JSON 生成器，只输出 JSON，不输出任何解释。"
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                temperature=0.3,
+                max_tokens=2048,
+                response_format={"type": "json_object"}
+            )
+
+            raw = response.choices[0].message.content
+
+            return extract_json(raw)
+
         except Exception as e:
+
+            last_error = e
+            print(f"      第 {retry + 1} 次失败：{e}")
+
+            time.sleep(2)
+
+    raise RuntimeError(last_error)
+
+
+# =========================
+# 主程序
+# =========================
+def main():
+
+    print(f"📂 读取 {INPUT_FILE}")
+
+    students = load_students(INPUT_FILE)
+
+    print(f"✅ 共 {len(students)} 条学生画像")
+
+    results = []
+
+    for idx, student in enumerate(students):
+
+        print(f"\n🔄 正在处理 {idx + 1}/{len(students)}")
+
+        try:
+
+            detail = generate_detail(student)
+
+            enriched = {
+                **student,
+                **detail
+            }
+
+            results.append(enriched)
+
+            print(
+                f"   ✅ "
+                f"{detail.get('university','未知大学')} | "
+                f"{detail.get('city','未知城市')}"
+            )
+
+        except Exception as e:
+
             print(f"   ❌ 失败：{e}")
-            # 失败时保留原始数据，占位补充
-            placeholder = {
+
+            enriched = {
+                **student,
                 "city": "待补充",
                 "university": "待补充",
                 "recent_social_posts": [],
@@ -120,15 +243,27 @@ def main():
                     "roommates": "待补充"
                 }
             }
-            results.append({**student, **placeholder})
-        
-        time.sleep(SLEEP_INTERVAL)
-    
 
-    with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
-        json.dump(results, f, ensure_ascii=False, indent=2)
-    
-    print(f"\n🎉 完成！结果已保存至 {OUTPUT_FILE}")
+            results.append(enriched)
+
+        # 实时保存，防止程序中断导致全部丢失
+        with open(
+            OUTPUT_FILE,
+            "w",
+            encoding="utf-8"
+        ) as f:
+
+            json.dump(
+                results,
+                f,
+                ensure_ascii=False,
+                indent=2
+            )
+
+        time.sleep(SLEEP_INTERVAL)
+
+    print(f"\n🎉 全部完成！")
+    print(f"📄 已保存：{OUTPUT_FILE}")
 
 
 if __name__ == "__main__":
