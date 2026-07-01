@@ -95,7 +95,7 @@ def generate_detail(student: Dict[str, Any]) -> Dict[str, Any]:
 
 def main():
     print(f"📂 读取 {INPUT_FILE}...")
-    students = load_students(INPUT_FILE)
+    students = load_json(INPUT_FILE)
     print(f"✅ 共 {len(students)} 条学生画像")
     
     results = []
