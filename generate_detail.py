@@ -212,3 +212,12 @@ def main():
 
 if __name__ == "__main__":
     main()
+(Vman) n50059067@M2404001039:~/Vman$ python generate_detail.py
+📂 读取 /home/n50059067/Vman/students.json
+✅ 共 10 条学生画像
+
+🔄 正在处理 1/10
+   ❌ 失败：'\n  "city"'
+
+🔄 正在处理 2/10
+   ❌ 失败：'\n  "city"'
