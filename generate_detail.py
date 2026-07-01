@@ -13,11 +13,9 @@ DETAIL_PROMPT = """
 你是一个专为中国大学生群体设计的人物画像生成引擎。请根据下面提供的学生画像，补充该角色的生活细节。
 
 【原始画像】
-
 {student_json}
 
 【需要补充的字段】
-
 1. city
 表示该学生目前所在城市。
 要求：
@@ -37,12 +35,11 @@ DETAIL_PROMPT = """
 - 不要为了知名度优先选择985高校，应严格按照 university_tier 进行匹配。
 - 只输出大学全称。
 
-3. recent_social_posts
-生成最近3条社交平台内容。
+3. recent_posts
+生成最近至多3条社交平台内容，社交平台以微信和小红书为主。注意画像的"social_platform"和"mbti"，如果是I人并且"social_platform"没有"微信朋友圈",和"小红书活跃"，可以减少recent_posts数量
 要求：
-- 平台必须符合画像中的 social_platform。
+- 尽量符合人设
 - 每条包括：
-    - platform
     - content
     - images
 - 内容自然真实。
@@ -73,9 +70,7 @@ roommates
 - 宿舍氛围
 
 【整体要求】
-
 - 保持与画像设定一致。
-- 不要新增设定。
 - 尽量简洁。
 - 不要写成长篇小说。
 - 所有字段必须填写。
@@ -85,33 +80,22 @@ roommates
 - 如果存在多个合理答案，请优先选择更少出现的城市、高校和生活方式，而不是重复热门答案。
 - 这是一个用于生成大量学生画像的数据集，应尽量保证不同学生之间具有多样性，避免模式化生成。
 
-
 【输出格式】
-
-严格输出 JSON。
-
-不要输出 markdown。
-
-不要输出解释。
-
-不要输出任何多余文字。
+严格输出 JSON。不要输出 markdown。不要输出解释。不要输出任何多余文字。
 
 {
   "city": "xxx",
   "university": "xxx",
-  "recent_social_posts": [
+  "recent_posts": [
     {
-      "platform": "朋友圈",
       "content": "xxx",
       "images": "xxx"
     },
     {
-      "platform": "小红书",
       "content": "xxx",
       "images": "xxx"
     },
     {
-      "platform": "抖音",
       "content": "xxx",
       "images": "xxx"
     }
@@ -189,40 +173,27 @@ def generate_detail(student: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def main():
-
     print(f"📂 读取 {INPUT_FILE}")
-
     students = load_students(INPUT_FILE)
-
     print(f"✅ 共 {len(students)} 条学生画像")
-
     results = []
-
     for idx, student in enumerate(students):
-
         print(f"\n🔄 正在处理 {idx + 1}/{len(students)}")
-
+        
         try:
-
             detail = generate_detail(student)
-
             enriched = {
                 **student,
                 **detail
             }
-
             results.append(enriched)
-
             print(
                 f"   ✅ "
                 f"{detail.get('university','未知大学')} | "
                 f"{detail.get('city','未知城市')}"
             )
-
         except Exception as e:
-
             print(f"   ❌ 失败：{e}")
-
             enriched = {
                 **student,
                 "city": "待补充",
@@ -235,7 +206,6 @@ def main():
                     "roommates": "待补充"
                 }
             }
-
             results.append(enriched)
 
         # 实时保存，防止程序中断导致全部丢失
@@ -244,7 +214,6 @@ def main():
             "w",
             encoding="utf-8"
         ) as f:
-
             json.dump(
                 results,
                 f,
@@ -253,10 +222,8 @@ def main():
             )
 
         time.sleep(SLEEP_INTERVAL)
-
     print(f"\n🎉 全部完成！")
     print(f"📄 已保存：{OUTPUT_FILE}")
-
 
 if __name__ == "__main__":
     main()
