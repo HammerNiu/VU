@@ -1,18 +1,40 @@
 核心思路：分层生成 + 约束传播
 把生成过程拆成 3 层，而不是一次性全部随机：
 
-L1：锚点层	gender, grade, university_tier, field, family_income_level	独立概率抽样（代码执行）
-L2：推理层	major, monthly_budget, phone.model, consumption_psychology, life_goal, living_situation	根据 L1 做条件概率抽样（代码执行，但带条件分支）
-L3：润色层	hobbies, social_platform, primary_stressor, phone_usage 各项	交给大模型，但给足上下文约束（Prompt 控制）
-
 L1 锚点层	严格执行概率分布，保证基础多样性	代码随机抽样
-gender, grade, hometown, university_tier, academic_performance, field,
-family_income_level, device_stack, mbti, relationship, hobbies
+gender, grade, hometown, university_tier, academic_performance,
+family_income_level, device_stack, mbti, relationship
 
 L2 推理层	基于 L1 做条件概率偏移，实现弱关联	代码条件抽样	
-age, major, city_tier, monthly_budget, living_situation, phone (brand+model), purchase_priority,
-life_goal
+age, major, city_tier, monthly_budget, living_situation, phone (brand+model),
+social_platform, life_goal
+age由grade决定，有1岁的出入
+field跟gender有关，男[0.5, 0.05, 0.25, 0.05, 0.1, 0.05], 女[0.2, 0.1, 0.35, 0.1, 0.2, 0.05], 选完field，在field里等概率随机选择major
+city_tier跟university_tier有关，双一流[0.7, 0.3, 0], 非双一流的一本[0.5, 0.4, 0.1], 二本[0.5, 0.4, 0.1], 专科[0.3, 0.4, 0.3]
+monthly_budget跟family_income_level有关，<10万[0.4, 0.5, 0.1, 0, 0], 10-30万及以上[0.1, 0.5, 0.25, 0.1, 0.05], 30-50万及以上[0, 0.5, 0.3, 0.15, 0.05]
+phone (brand)跟family_income_level有关，<10万[0.3, 0.1, 0.2, 0.15, 0.15, 0.05, 0.05]，10-30万及以上[0.3, 0.3, 0.1, 0.1, 0.1, 0.1, 0.05, 0.05]
+social_platform和gender, mbti有关，男性E人[0.6, 0.4, 0.6, 0.5], 男性I人[0.3, 0.2, 0.4, 0.5], 女性E人[0.8, 0.6, 0.6, 0.3], 女性I人[0.4, 0.5, 0.4, 0.2]
+life_goal跟grade有关, "大一_大二": {
+        "options": ["读研", "考公", "就业", "创业", "出国", "暂未确定"],
+        "distribution": [0.25, 0.06, 0.25, 0.04, 0.10, 0.30]
+      },
+      "大三_大四": {
+        "options": ["读研", "考公", "就业", "创业", "出国", "暂未确定"],
+        "distribution": [0.40, 0.10, 0.30, 0.02, 0.10, 0.08]
+      },
+      "研究生": {
+        "options": ["读博", "考公", "就业", "创业", "出国","暂未确定"],
+        "distribution": [0.25, 0.10, 0.35, 0.02, 0.08, 0.20]
+      },
+      "考研二战备战中": {
+        "options": ["读研"],
+        "distribution": [1.0]
+      }
 
-L3 润色层
-university, behavior中的social_network_size, screen_time, phone_usage, social_platform, ai_usage,
-primary_stressor, consumption_psychology
+L3 润色层 大模型
+university, behavior中的social_network_size, screen_time, phone_usage, hobbies,
+primary_stressor, consumption_psychology, purchase_priority
+relationships with parents, partner, friends, roommates
+
+
+
