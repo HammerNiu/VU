@@ -1,40 +1,602 @@
-核心思路：分层生成 + 约束传播
-把生成过程拆成 3 层，而不是一次性全部随机：
-
-L1 锚点层	严格执行概率分布，保证基础多样性	代码随机抽样
-gender, grade, hometown, university_tier, academic_performance,
-family_income_level, device_stack, mbti, relationship
-
-L2 推理层	基于 L1 做条件概率偏移，实现弱关联	代码条件抽样	
-age, major, city_tier, monthly_budget, living_situation, phone (brand+model),
-social_platform, life_goal
-age由grade决定，有1岁的出入
-field跟gender有关，男[0.5, 0.05, 0.25, 0.05, 0.1, 0.05], 女[0.2, 0.1, 0.35, 0.1, 0.2, 0.05], 选完field，在field里等概率随机选择major
-city_tier跟university_tier有关，双一流[0.7, 0.3, 0], 非双一流的一本[0.5, 0.4, 0.1], 二本[0.5, 0.4, 0.1], 专科[0.3, 0.4, 0.3]
-monthly_budget跟family_income_level有关，<10万[0.4, 0.5, 0.1, 0, 0], 10-30万及以上[0.1, 0.5, 0.25, 0.1, 0.05], 30-50万及以上[0, 0.5, 0.3, 0.15, 0.05]
-phone (brand)跟family_income_level有关，<10万[0.3, 0.1, 0.2, 0.15, 0.15, 0.05, 0.05]，10-30万及以上[0.3, 0.3, 0.1, 0.1, 0.1, 0.1, 0.05, 0.05]
-social_platform和gender, mbti有关，男性E人[0.6, 0.4, 0.6, 0.5], 男性I人[0.3, 0.2, 0.4, 0.5], 女性E人[0.8, 0.6, 0.6, 0.3], 女性I人[0.4, 0.5, 0.4, 0.2]
-life_goal跟grade有关, "大一_大二": {
-        "options": ["读研", "考公", "就业", "创业", "出国", "暂未确定"],
-        "distribution": [0.25, 0.06, 0.25, 0.04, 0.10, 0.30]
-      },
-      "大三_大四": {
-        "options": ["读研", "考公", "就业", "创业", "出国", "暂未确定"],
-        "distribution": [0.40, 0.10, 0.30, 0.02, 0.10, 0.08]
-      },
-      "研究生": {
-        "options": ["读博", "考公", "就业", "创业", "出国","暂未确定"],
-        "distribution": [0.25, 0.10, 0.35, 0.02, 0.08, 0.20]
-      },
-      "考研二战备战中": {
-        "options": ["读研"],
-        "distribution": [1.0]
+[
+  {
+    "name": "001",
+    "gender": "男",
+    "age": 20,
+    "grade": "大三",
+    "hometown": "海南省",
+    "university_tier": "双一流",
+    "city_tier": "一线及新一线",
+    "city": "南京",
+    "university": "南京理工大学",
+    "field": "理工类",
+    "major": "软件工程",
+    "academic_performance": "前10%",
+    "mbti": "ISTJ",
+    "relationship": "谈过已分手",
+    "family_income_level": "10-30万",
+    "living_situation": "6人宿舍",
+    "monthly_budget": "3000元左右",
+    "device_stack": [
+      "手机",
+      "笔记本",
+      "手表"
+    ],
+    "phone_brand": "OPPO",
+    "phone": "Find X系",
+    "social_platform": [
+      "抖音活跃"
+    ],
+    "life_goal": "读研",
+    "behavior": {
+      "social_network_size": "中型(6-15人)",
+      "screen_time": "6-9h",
+      "phone_usage": {
+        "short_video": "中度(60-150min/天)",
+        "gaming": "轻度休闲(<60min/天)",
+        "long_video": "偶尔追剧/电影",
+        "study_reading": "偶尔查资料/背单词",
+        "photo_video": "偶尔记录"
       }
-
-L3 润色层 大模型
-university, behavior中的social_network_size, screen_time, phone_usage, hobbies,
-primary_stressor, consumption_psychology, purchase_priority
-relationships with parents, partner, friends, roommates
-
-
-
+    },
+    "hobbies": [
+      "游戏电竞",
+      "运动健身"
+    ],
+    "primary_stressor": [
+      "学业压力",
+      "就业焦虑"
+    ],
+    "consumption_psychology": "实用主义",
+    "phone_purchase_priority": [
+      "续航/电池",
+      "系统体验/流畅度",
+      "价格/性价比"
+    ],
+    "relationship_with_parents": "每周视频两次，主要聊学习和生活费用，父母比较支持考研，偶尔提醒注意身体",
+    "relationship_with_friends": "5个核心朋友，主要是高中同学和大学室友，常一起打游戏、讨论考研信息",
+    "relationship_with_roommates": "6人宿舍，和其中3人关系较好，平常一起上自习、打篮球，宿舍氛围和谐但各有各的事",
+    "relationship_with_partner": "无"
+  },
+  {
+    "name": "002",
+    "gender": "男",
+    "age": 22,
+    "grade": "大四",
+    "hometown": "香港澳门",
+    "university_tier": "双一流",
+    "city_tier": "一线及新一线",
+    "city": "广州",
+    "university": "华南理工大学",
+    "field": "理工类",
+    "major": "软件工程",
+    "academic_performance": "30-60%",
+    "mbti": "ESFJ",
+    "relationship": "暧昧期",
+    "family_income_level": "50-80万",
+    "living_situation": "6人宿舍",
+    "monthly_budget": "2000元左右",
+    "device_stack": [
+      "手机",
+      "平板",
+      "耳机"
+    ],
+    "phone_brand": "vivo",
+    "phone": "Y系",
+    "social_platform": [
+      "微信朋友圈"
+    ],
+    "life_goal": "就业",
+    "behavior": {
+      "social_network_size": "中型(6-15人)",
+      "screen_time": "6-9h",
+      "phone_usage": {
+        "short_video": "中度(60-150min/天)",
+        "gaming": "轻度休闲(<60min/天)",
+        "long_video": "偶尔追剧/电影",
+        "study_reading": "偶尔查资料/背单词",
+        "photo_video": "偶尔记录"
+      }
+    },
+    "hobbies": [
+      "游戏电竞",
+      "社交/组局"
+    ],
+    "primary_stressor": [
+      "就业焦虑"
+    ],
+    "consumption_psychology": "实用主义",
+    "phone_purchase_priority": [
+      "续航/电池",
+      "价格/性价比"
+    ],
+    "relationship_with_parents": "每月视频两次，日常分享生活琐事，父母比较开明，偶尔会聊到就业方向，关系和睦",
+    "relationship_with_friends": "4个核心朋友，经常一起打游戏、聚餐，聊实习和求职话题",
+    "relationship_with_roommates": "6人宿舍，跟其中3人关系较好，一起开黑打游戏、点外卖，宿舍氛围热闹",
+    "relationship_with_partner": "暧昧期，每天微信聊天，周末偶尔一起吃饭或散步，主要矛盾是对方觉得我有时太忙没及时回复"
+  },
+  {
+    "name": "003",
+    "gender": "男",
+    "age": 23,
+    "grade": "研究生",
+    "hometown": "浙江省",
+    "university_tier": "非双一流的一本",
+    "city_tier": "二线",
+    "city": "青岛",
+    "university": "青岛大学",
+    "field": "医学类",
+    "major": "公共卫生",
+    "academic_performance": "30-60%",
+    "mbti": "ENFP",
+    "relationship": "谈过已分手",
+    "family_income_level": "80万+",
+    "living_situation": "4人宿舍",
+    "monthly_budget": "2500元左右",
+    "device_stack": [
+      "手机",
+      "笔记本",
+      "耳机"
+    ],
+    "phone_brand": "苹果",
+    "phone": "iPhone 17 Pro Max",
+    "social_platform": [
+      "微信朋友圈",
+      "抖音活跃"
+    ],
+    "life_goal": "暂未确定",
+    "behavior": {
+      "social_network_size": "中型(6-15人)",
+      "screen_time": "6-9h",
+      "phone_usage": {
+        "short_video": "重度(150min+/天)",
+        "gaming": "轻度休闲(<60min/天)",
+        "long_video": "偶尔追剧/电影",
+        "study_reading": "偶尔查资料/背单词",
+        "photo_video": "偶尔记录"
+      }
+    },
+    "hobbies": [
+      "吃喝探店",
+      "游戏电竞"
+    ],
+    "primary_stressor": [
+      "存在性迷茫"
+    ],
+    "consumption_psychology": "品质体验派",
+    "phone_purchase_priority": [
+      "拍照/影像",
+      "系统体验/流畅度",
+      "品牌"
+    ],
+    "relationship_with_parents": "每周视频2-3次，母亲常关心生活细节，父亲话少但支持，偶尔因消费观念有小争执",
+    "relationship_with_friends": "5个核心朋友，线上群聊活跃，周末常约饭或探店，聊游戏和未来规划",
+    "relationship_with_roommates": "4人宿舍，跟所有室友关系都不错，一起打游戏、点外卖，宿舍氛围热闹",
+    "relationship_with_partner": "无"
+  },
+  {
+    "name": "004",
+    "gender": "男",
+    "age": 21,
+    "grade": "大三",
+    "hometown": "河北省",
+    "university_tier": "非双一流的一本",
+    "city_tier": "一线及新一线",
+    "city": "深圳",
+    "university": "深圳大学",
+    "field": "理工类",
+    "major": "机械工程",
+    "academic_performance": "10-30%",
+    "mbti": "ESFJ",
+    "relationship": "恋爱中",
+    "family_income_level": "50-80万",
+    "living_situation": "4人宿舍",
+    "monthly_budget": "3000元左右",
+    "device_stack": [
+      "手机",
+      "笔记本",
+      "耳机"
+    ],
+    "phone_brand": "华为Mate系列",
+    "phone": "Mate 80 Pro Max",
+    "social_platform": [
+      "微信朋友圈",
+      "B站活跃"
+    ],
+    "life_goal": "读研",
+    "behavior": {
+      "social_network_size": "中型(6-15人)",
+      "screen_time": "6-9h",
+      "phone_usage": {
+        "short_video": "中度(60-150min/天)",
+        "gaming": "轻度休闲(<60min/天)",
+        "long_video": "偶尔追剧/电影",
+        "study_reading": "偶尔查资料/背单词",
+        "photo_video": "偶尔记录"
+      }
+    },
+    "hobbies": [
+      "游戏电竞",
+      "影视追剧"
+    ],
+    "primary_stressor": [
+      "学业压力",
+      "存在性迷茫"
+    ],
+    "consumption_psychology": "品质体验派",
+    "phone_purchase_priority": [
+      "系统体验/流畅度",
+      "续航/电池",
+      "拍照/影像"
+    ],
+    "relationship_with_parents": "每周视频通话2-3次，分享学校日常和考研复习进展，父母常叮嘱注意身体，偶尔因消费观念有小小分歧",
+    "relationship_with_friends": "有5个关系密切的朋友，主要是同班同学和社团伙伴，平时一起自习、打球，聊天内容围绕课程、考研和游戏",
+    "relationship_with_roommates": "4人宿舍，和其中2个室友关系较好，经常一起开黑打游戏、点外卖，宿舍氛围热闹和谐",
+    "relationship_with_partner": "异地恋，每天微信聊天，周末视频，主要矛盾是见面时间少，但彼此理解支持"
+  },
+  {
+    "name": "005",
+    "gender": "女",
+    "age": 20,
+    "grade": "大二",
+    "hometown": "江西省",
+    "university_tier": "二本",
+    "city_tier": "三线",
+    "city": "洛阳",
+    "university": "洛阳师范学院",
+    "field": "经管法类",
+    "major": "工商管理",
+    "academic_performance": "前10%",
+    "mbti": "ESFP",
+    "relationship": "母胎单身",
+    "family_income_level": "10-30万",
+    "living_situation": "6人宿舍",
+    "monthly_budget": "3000元+",
+    "device_stack": [
+      "手机",
+      "笔记本",
+      "平板",
+      "耳机",
+      "手表"
+    ],
+    "phone_brand": "苹果",
+    "phone": "iPhone 16 Plus",
+    "social_platform": [
+      "微信朋友圈",
+      "抖音活跃"
+    ],
+    "life_goal": "读研",
+    "behavior": {
+      "social_network_size": "中型(6-15人)",
+      "screen_time": "6-9h",
+      "phone_usage": {
+        "short_video": "中度(60-150min/天)",
+        "gaming": "轻度休闲(<60min/天)",
+        "long_video": "偶尔追剧/电影",
+        "study_reading": "偶尔查资料/背单词",
+        "photo_video": "日常高频拍摄"
+      }
+    },
+    "hobbies": [
+      "吃喝探店",
+      "影视追剧"
+    ],
+    "primary_stressor": [
+      "学业压力",
+      "就业焦虑"
+    ],
+    "consumption_psychology": "情绪消费/悦己",
+    "phone_purchase_priority": [
+      "拍照/影像",
+      "系统体验/流畅度"
+    ],
+    "relationship_with_parents": "每天微信聊几句，妈妈分享生活琐事，爸爸偶尔问学习，每月视频一两次，家庭氛围温暖但不过度干涉",
+    "relationship_with_friends": "5个核心朋友，常一起探店、逛街、刷抖音分享搞笑视频，周末约着去市区玩，聊天内容主要是吃喝玩乐和考试吐槽",
+    "relationship_with_roommates": "6人宿舍，和3个室友关系要好，经常一起点外卖、拍短视频、聊八卦，宿舍氛围热闹融洽",
+    "relationship_with_partner": "无"
+  },
+  {
+    "name": "006",
+    "gender": "男",
+    "age": 23,
+    "grade": "考研二战备战中",
+    "hometown": "吉林省",
+    "university_tier": "二本",
+    "city_tier": "一线及新一线",
+    "city": "合肥",
+    "university": "安徽大学",
+    "field": "其他",
+    "major": "心理学",
+    "academic_performance": "30-60%",
+    "mbti": "ENFJ",
+    "relationship": "恋爱中",
+    "family_income_level": "30-50万",
+    "living_situation": "4人宿舍",
+    "monthly_budget": "2500元左右",
+    "device_stack": [
+      "手机",
+      "笔记本",
+      "平板",
+      "手表"
+    ],
+    "phone_brand": "vivo",
+    "phone": "S系",
+    "social_platform": [
+      "微信朋友圈",
+      "小红书活跃",
+      "抖音活跃",
+      "B站活跃"
+    ],
+    "life_goal": "读研",
+    "behavior": {
+      "social_network_size": "中型(6-15人)",
+      "screen_time": "6-9h",
+      "phone_usage": {
+        "short_video": "中度(60-150min/天)",
+        "gaming": "轻度休闲(<60min/天)",
+        "long_video": "偶尔追剧/电影",
+        "study_reading": "偶尔查资料/背单词",
+        "photo_video": "偶尔记录"
+      }
+    },
+    "hobbies": [
+      "社交/组局",
+      "影视追剧"
+    ],
+    "primary_stressor": [
+      "学业压力"
+    ],
+    "consumption_psychology": "品质体验派",
+    "phone_purchase_priority": [
+      "拍照/影像",
+      "系统体验/流畅度",
+      "外观设计"
+    ],
+    "relationship_with_parents": "每周视频两三次，分享备考日常和趣事，父母关心学习状态但不过度施压，关系亲密",
+    "relationship_with_friends": "4个核心朋友，常约自习和聚餐，聊考研进度、感情烦恼，互相鼓励",
+    "relationship_with_roommates": "4人宿舍，和两个室友关系较好，一起点外卖、聊八卦，宿舍氛围融洽",
+    "relationship_with_partner": "恋爱两年，同城但不同校，每周见面2-3次，一起自习和吃饭，偶尔因备考压力产生小摩擦，但沟通及时"
+  },
+  {
+    "name": "007",
+    "gender": "男",
+    "age": 23,
+    "grade": "考研二战备战中",
+    "hometown": "广西壮族自治区",
+    "university_tier": "二本",
+    "city_tier": "三线",
+    "city": "柳州",
+    "university": "广西科技大学",
+    "field": "理工类",
+    "major": "通信工程",
+    "academic_performance": "前10%",
+    "mbti": "INFP",
+    "relationship": "母胎单身",
+    "family_income_level": "10-30万",
+    "living_situation": "4人宿舍",
+    "monthly_budget": "2000元左右",
+    "device_stack": [
+      "手机",
+      "笔记本",
+      "平板",
+      "耳机"
+    ],
+    "phone_brand": "华为Pura系列",
+    "phone": "Pura 80 Pro+",
+    "social_platform": [
+      "微信朋友圈"
+    ],
+    "life_goal": "读研",
+    "behavior": {
+      "social_network_size": "小圈子(3-5人)",
+      "screen_time": "6-9h",
+      "phone_usage": {
+        "short_video": "中度(60-150min/天)",
+        "gaming": "轻度休闲(<60min/天)",
+        "long_video": "偶尔追剧/电影",
+        "study_reading": "中度(依赖手机学习/阅读)",
+        "photo_video": "偶尔记录"
+      }
+    },
+    "hobbies": [
+      "学习卷王",
+      "读书",
+      "影视追剧"
+    ],
+    "primary_stressor": [
+      "学业压力",
+      "存在性迷茫"
+    ],
+    "consumption_psychology": "实用主义",
+    "phone_purchase_priority": [
+      "续航/电池",
+      "价格/性价比",
+      "系统体验/流畅度"
+    ],
+    "relationship_with_parents": "每周通话两三次，聊学习进展和日常琐事，父母关心考研情况但不过度施压，偶尔寄家乡特产，关系温馨",
+    "relationship_with_friends": "4个核心朋友，考研期间互相打气，线上分享资料和吐槽，偶尔聚餐放松",
+    "relationship_with_roommates": "4人宿舍，和2个室友关系较好，其中一个也是考研党，经常一起自习、讨论题目，宿舍氛围安静但融洽",
+    "relationship_with_partner": "无"
+  },
+  {
+    "name": "008",
+    "gender": "男",
+    "age": 22,
+    "grade": "考研二战备战中",
+    "hometown": "内蒙古自治区",
+    "university_tier": "专科",
+    "city_tier": "二线",
+    "city": "济南",
+    "university": "山东职业技术学院",
+    "field": "文史哲类",
+    "major": "小语种",
+    "academic_performance": "前10%",
+    "mbti": "ISFJ",
+    "relationship": "谈过已分手",
+    "family_income_level": "10-30万",
+    "living_situation": "6人宿舍",
+    "monthly_budget": "2000元左右",
+    "device_stack": [
+      "手机",
+      "笔记本",
+      "平板",
+      "耳机"
+    ],
+    "phone_brand": "苹果",
+    "phone": "iPhone 16 Pro",
+    "social_platform": [
+      "微信朋友圈",
+      "抖音活跃"
+    ],
+    "life_goal": "读研",
+    "behavior": {
+      "social_network_size": "小圈子(3-5人)",
+      "screen_time": "6-9h",
+      "phone_usage": {
+        "short_video": "中度(60-150min/天)",
+        "gaming": "轻度休闲(<60min/天)",
+        "long_video": "中度(每周几小时)",
+        "study_reading": "偶尔查资料/背单词",
+        "photo_video": "偶尔记录"
+      }
+    },
+    "hobbies": [
+      "学习卷王",
+      "影视追剧"
+    ],
+    "primary_stressor": [
+      "学业压力",
+      "就业焦虑"
+    ],
+    "consumption_psychology": "实用主义",
+    "phone_purchase_priority": [
+      "续航/电池",
+      "系统体验/流畅度",
+      "价格/性价比"
+    ],
+    "relationship_with_parents": "每周视频三四次，聊备考情况和日常，父母比较支持但偶尔会催找工作，总体温馨但有压力",
+    "relationship_with_friends": "4个核心朋友，其中2个也在备考，常微信互相鼓励、分享资料，偶尔出去吃顿好的放松",
+    "relationship_with_roommates": "6人宿舍，跟其中3个关系不错，但大家作息不太一致，晚上常有人打游戏或看视频，备考时偶尔会去图书馆自习",
+    "relationship_with_partner": "无"
+  },
+  {
+    "name": "009",
+    "gender": "女",
+    "age": 19,
+    "grade": "大三",
+    "hometown": "吉林省",
+    "university_tier": "专科",
+    "city_tier": "二线",
+    "city": "徐州",
+    "university": "徐州工业职业技术学院",
+    "field": "经管法类",
+    "major": "工商管理",
+    "academic_performance": "10-30%",
+    "mbti": "ENFP",
+    "relationship": "母胎单身",
+    "family_income_level": "30-50万",
+    "living_situation": "6人宿舍",
+    "monthly_budget": "2000元左右",
+    "device_stack": [
+      "手机",
+      "笔记本",
+      "耳机"
+    ],
+    "phone_brand": "苹果",
+    "phone": "iPhone 15",
+    "social_platform": [
+      "微信朋友圈",
+      "抖音活跃",
+      "B站活跃"
+    ],
+    "life_goal": "出国",
+    "behavior": {
+      "social_network_size": "中型(6-15人)",
+      "screen_time": "6-9h",
+      "phone_usage": {
+        "short_video": "中度(60-150min/天)",
+        "gaming": "轻度休闲(<60min/天)",
+        "long_video": "偶尔追剧/电影",
+        "study_reading": "偶尔查资料/背单词",
+        "photo_video": "日常高频拍摄"
+      }
+    },
+    "hobbies": [
+      "影视追剧",
+      "吃喝探店",
+      "旅行户外"
+    ],
+    "primary_stressor": [
+      "就业焦虑"
+    ],
+    "consumption_psychology": "品质体验派",
+    "phone_purchase_priority": [
+      "拍照/影像",
+      "系统体验/流畅度",
+      "外观设计"
+    ],
+    "relationship_with_parents": "每周视频2-3次，分享生活趣事和探店照片，偶尔聊未来规划，父母比较支持她的想法，关系亲密",
+    "relationship_with_friends": "5-6个核心朋友，经常一起探店、逛街、拍短视频，聊天内容主要是穿搭、娱乐八卦和旅行计划",
+    "relationship_with_roommates": "6人宿舍，跟其中3人关系要好，经常一起点外卖、看剧、讨论抖音热门，宿舍氛围热闹和谐",
+    "relationship_with_partner": "无"
+  },
+  {
+    "name": "010",
+    "gender": "男",
+    "age": 22,
+    "grade": "研究生",
+    "hometown": "江苏省",
+    "university_tier": "非双一流的一本",
+    "city_tier": "一线及新一线",
+    "city": "广州",
+    "university": "广东工业大学",
+    "field": "理工类",
+    "major": "土木工程",
+    "academic_performance": "10-30%",
+    "mbti": "ENFP",
+    "relationship": "恋爱中",
+    "family_income_level": "10-30万",
+    "living_situation": "6人宿舍",
+    "monthly_budget": "2000元左右",
+    "device_stack": [
+      "手机",
+      "笔记本",
+      "耳机"
+    ],
+    "phone_brand": "苹果",
+    "phone": "iPhone 15 Pro",
+    "social_platform": [
+      "小红书活跃",
+      "抖音活跃"
+    ],
+    "life_goal": "读博",
+    "behavior": {
+      "social_network_size": "中型(6-15人)",
+      "screen_time": "6-9h",
+      "phone_usage": {
+        "short_video": "中度(60-150min/天)",
+        "gaming": "轻度休闲(<60min/天)",
+        "long_video": "偶尔追剧/电影",
+        "study_reading": "偶尔查资料/背单词",
+        "photo_video": "偶尔记录"
+      }
+    },
+    "hobbies": [
+      "运动健身",
+      "游戏电竞"
+    ],
+    "primary_stressor": [
+      "学业压力",
+      "经济压力"
+    ],
+    "consumption_psychology": "实用主义",
+    "phone_purchase_priority": [
+      "处理器性能",
+      "系统体验/流畅度"
+    ],
+    "relationship_with_parents": "每周视频两次，分享实验进展和科研趣事，父母会关心生活费够不够，偶尔因为熬夜问题唠叨几句，整体关系亲密",
+    "relationship_with_friends": "4个核心朋友，都是研究生同学，平时一起泡实验室、打球，聊科研八卦和未来规划",
+    "relationship_with_roommates": "6人宿舍，跟其中3人关系好，经常组队开黑打游戏，一起吐槽导师和论文，宿舍氛围热闹",
+    "relationship_with_partner": "异地恋，每天视频聊天，分享日常和科研压力，偶尔因为时间安排不一致闹小矛盾，但总体理解支持"
+  }
+]
