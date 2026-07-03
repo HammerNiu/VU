@@ -1,238 +1,258 @@
-import json
 import re
-from pathlib import Path
-
-import openpyxl
+import random
+import pandas as pd
 from openai import OpenAI
-
-STUDENTS_FILE = "students.json"
-EXCEL_FILE = "动图.xlsx"
-
-OUTPUT_FILE = "动图_已填写.xlsx"
+import json
 
 client = OpenAI(
-    api_key=API_KEY,
-    base_url=BASE_URL
+    api_key="token-abc123",
+    base_url="http://100.102.218.124:3236/v1"
 )
 
-def load_questions(workbook):
-    """
-    收集所有sheet中的题目
-    默认：
-        C列 = 题目内容
-    """
+def load_students_from_json(file_path):
+    """从JSON文件读取学生列表"""
+    with open(file_path, 'r', encoding='utf-8') as f:
+        students = json.load(f)
+    return students
 
+
+def extract_questions_from_excel(excel_path, question_col=2, skip_header=True):
+    """
+    从Excel提取问题文本（默认C列，跳过表头）
+    返回问题列表（按顺序）和问题行索引（从0开始）
+    """
+    df = pd.read_excel(excel_path, header=None)
+    start = 1 if skip_header else 0
     questions = []
+    row_indices = []
+    for i in range(start, df.shape[0]):
+        q = str(df.iloc[i, question_col]).strip() if pd.notna(df.iloc[i, question_col]) else ''
+        if q:
+            # 将问题中的换行替换为空格，确保每个问题是一行
+            q = q.replace('\n', ' ').replace('\r', '')
+            questions.append(q)
+            row_indices.append(i)
+    return questions, row_indices, df
 
-    for ws in workbook.worksheets:
 
-        for row in range(2, ws.max_row + 1):
+def parse_tagged_answers(result, expected_count):
+    """
+    按 "Q<题号>|答案" 标记解析模型输出。
+    相比按行数直接对齐，标记式解析不会因为某一题多输出/漏输出一个换行，
+    导致后面所有题目的答案整体错位。
+    """
+    matches = dict(re.findall(r'Q(\d+)\|(.*)', result))
+    answers = []
+    missing = []
+    for i in range(1, expected_count + 1):
+        ans = matches.get(str(i), "").strip()
+        if not ans:
+            missing.append(i)
+        answers.append(ans)
+    if missing:
+        print(f"  警告：题号 {missing} 未能从模型输出中解析到答案")
+    return answers
 
-            q = ws.cell(row=row, column=3).value
 
-            if q is None:
-                continue
+# 同一套硬性格式要求的几种等价措辞，每个学生随机选一版，
+# 避免所有请求都锚定在完全相同的指令文本上（Q<题号>| 的标记格式本身保持不变，不能变）
+RULE_TEMPLATES = [
+    """【强制规则】
+1. 下面有若干道编号的题目，每题必须以 "Q<题号>|" 开头，紧接答案内容，例如：
+   Q1|大概拍了450张左右，其中约80张是有意识用动态模式拍摄的
+   Q2|主要用后置人像模式拍摄朋友合影
+2. 每题只占一行，即使答案较长也不要换行，用句号或分号连接
+3. 题号必须与题目编号一一对应，不要跳号、不要重复
+4. 不要加解释、不要加多余空行、不要用 markdown""",
+    """【输出格式】
+- 逐题作答，每一行对应一道题，格式固定为 "Q<题号>|你的回答"，比如：
+  Q1|大概拍了450张左右，其中约80张是有意识用动态模式拍摄的
+  Q2|主要用后置人像模式拍摄朋友合影
+- 一行写完一题，答案再长也不要换行，中间用句号/分号隔开
+- 题号顺序不能乱，也不能漏题或重复
+- 除了这些答案行，什么都不要多写（不要解释、不要空行、不要 markdown）""",
+    """作答时请严格遵守：
+① 每道题对应一行，行首固定写 "Q<题号>|"，后面直接跟答案，例如：
+   Q1|大概拍了450张左右，其中约80张是有意识用动态模式拍摄的
+   Q2|主要用后置人像模式拍摄朋友合影
+② 一行只答一题，长答案用句号/分号连接，不要换行
+③ 题号要和题目顺序对齐，既不跳号也不重复
+④ 除答案本身外不要输出任何解释、空行或 markdown 格式""",
+]
 
-            q = str(q).strip()
+# 用画像里已有的 mbti 维度，把"人设"转成具体的语气/文风差异，
+# 而不是只让模型看到不同内容、却用同一种腔调去写
+MBTI_EI_STYLE = {
+    "E": "性格外向，表达更热烈、爱举生活化的例子，句子可以稍长一些",
+    "I": "性格内向，表达更简洁内敛，不做过多铺陈和解释",
+}
+MBTI_TF_STYLE = {
+    "T": "偏理性思考，回答里会带一点分析和条理感",
+    "F": "偏感性表达，回答里更容易带情绪和感受词",
+}
 
-            if not q:
-                continue
 
-            questions.append(
-                {
-                    "sheet": ws.title,
-                    "row": row,
-                    "question": q
-                }
-            )
+def build_style_hint(student):
+    """根据 mbti 拼出一句写作风格提示，让不同人设的回答在语气上也有区别"""
+    mbti = student.get("mbti", "")
+    hints = []
+    if len(mbti) >= 1 and mbti[0] in MBTI_EI_STYLE:
+        hints.append(MBTI_EI_STYLE[mbti[0]])
+    if len(mbti) >= 3 and mbti[2] in MBTI_TF_STYLE:
+        hints.append(MBTI_TF_STYLE[mbti[2]])
+    return "，".join(hints)
 
-    return questions
 
-def build_questionnaire(questions):
+def build_phone_hint(student):
+    """
+    根据 phone_brand / phone / phone_purchase_priority 拼一句提示：
+    1) 约束回答里提到的品牌、系统、功能名称要和自己的手机保持一致，不要串到别的品牌上
+    2) 让"当初买手机在意什么"决定这个人对相关话题懂不懂行、愿不愿意展开讲细节
+    """
+    phone_brand = student.get("phone_brand", "")
+    phone = student.get("phone", "")
+    priority = student.get("phone_purchase_priority", [])
 
-    txt = []
+    parts = []
+    if phone_brand or phone:
+        device = "、".join(p for p in [phone_brand, phone] if p)
+        parts.append(f"你现在用的手机是「{device}」，回答里凡是涉及手机品牌、系统或功能名称的地方，都要和这台手机保持一致，不要写成其他品牌/机型的说法")
+    if priority:
+        parts.append(f"当初买手机最看重「{'、'.join(priority)}」，问题涉及这些方面时你会更懂行、更愿意展开细节；不涉及的方面可以答得更随意、更外行一点")
+    return "；".join(parts)
 
-    for i, item in enumerate(questions, start=1):
-        txt.append(f"{i}. {item['question']}")
 
-    return "\n\n".join(txt)
+def generate_answers_for_student(student, questions):
+    """
+    为单个学生生成问卷答案
+    student: 学生画像字典
+    questions: 问题文本列表（按顺序）
+    返回答案列表（字符串列表，与 questions 一一对应）
+    """
+    # 构建学生画像描述字符串（用于system_prompt）
+    def format_dict(d, indent=0):
+        lines = []
+        for k, v in d.items():
+            if isinstance(v, dict):
+                lines.append("  " * indent + f"{k}:")
+                lines.extend(format_dict(v, indent + 1))
+            elif isinstance(v, list):
+                lines.append("  " * indent + f"{k}: {', '.join(v)}")
+            else:
+                lines.append("  " * indent + f"{k}: {v}")
+        return lines
 
-def ask_qwen(profile, questionnaire_text, total_questions):
+    profile_lines = []
+    for key, value in student.items():
+        if key == 'name':
+            continue
+        if isinstance(value, dict):
+            profile_lines.append(f"{key}:")
+            profile_lines.extend(format_dict(value, 1))
+        elif isinstance(value, list):
+            profile_lines.append(f"{key}: {', '.join(value)}")
+        else:
+            profile_lines.append(f"{key}: {value}")
+    profile_str = '\n'.join(profile_lines)
 
-    system_prompt = f"""
-你是一个真实的大学生，以下是你的个人信息：
+    style_hint = build_style_hint(student)
+    style_block = f"\n【说话风格】{style_hint}，回答时让这种性格特点体现在语气和用词上，不要每个人听起来都是一个调调。\n" if style_hint else ""
 
-{json.dumps(profile, ensure_ascii=False, indent=2)}
+    phone_hint = build_phone_hint(student)
+    phone_block = f"\n【手机背景】{phone_hint}。\n" if phone_hint else ""
 
-请充分代入角色。
+    rules_block = random.choice(RULE_TEMPLATES)
 
-把自己当成一个真实存在的人。
+    system_prompt = f"""你是一个真实的大学生，以下是你的个人信息：
+                    {profile_str}
+                    **充分代入角色**，把自己当成一个有血有肉的人。可以适当添加一些人物背景，人物性格。
+                    针对问卷问题，给出真实、合理的个人回答，保证一致性。涉及具体数量、占比等数值时，请结合你的个人画像自行给出一个合理且有个人特色的数字，不要凑整、不要和"大多数人"给出相似的数值。
+                    {style_block}{phone_block}
+                    **直接逐题作答**
 
-你拥有自己的成长经历、消费观、手机使用习惯、社交圈、学习状态和价值观。
+                    {rules_block}
+                """
 
-允许根据画像合理补充细节背景，
-但必须与画像保持一致。
-
-针对问卷问题给出真实、自然、有个人特色的回答。
-
-请保证：
-
-- 回答符合年龄
-- 回答符合专业
-- 回答符合经济条件
-- 回答符合MBTI
-- 回答符合兴趣爱好
-- 回答符合恋爱状态
-- 回答符合设备使用习惯
-- 回答前后一致
-
-【强制规则】
-1. 问卷共有 {total_questions} 道题。
-   请返回长度必须等于 {total_questions} 的JSON。
-2. 返回合法的JSON对象：
-{{
-  "answers": [
-    "答案1",
-    "答案2",
-    ...
-  ]
-}}
-不要输任何其他内容。
-不要输出```json。
-3. 不要重复问题
-4. 选择题直接写：
-   A、xxxx；C、xxxx；F、xxxx
-5. 开放题请写真实自然的大学生表达
-"""
-
-    user_prompt = f"""
-请回答以下问卷：
-
-{questionnaire_text}
-"""
+    questions_text = '\n'.join(f"{i + 1}. {q}" for i, q in enumerate(questions))
 
     response = client.chat.completions.create(
-        model=MODEL_NAME,
+        model="Qwen3-32B",
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": questions_text},
+        ],
         temperature=1.0,
         top_p=0.95,
-        messages=[
-            {
-                "role": "system",
-                "content": system_prompt
-            },
-            {
-                "role": "user",
-                "content": user_prompt
-            }
-        ]
+        presence_penalty=0.4,
     )
 
-    return response.choices[0].message.content.strip()
+    result = response.choices[0].message.content
+    return parse_tagged_answers(result, len(questions))
 
-def parse_answers(answer_text):
 
-    answer_text = answer_text.strip()
+def fill_excel_with_students(excel_path, students, questions, row_indices, output_path):
+    """
+    将每个学生的答案填入对应的列（D列开始）
+    每处理完一个学生就落盘一次，避免中途某个学生失败导致前面已完成的结果全部丢失
+    """
+    df = pd.read_excel(excel_path, header=None)
+    # 确保有足够的列
+    num_students = len(students)
+    start_col = 3  # D列索引
+    if df.shape[1] < start_col + num_students:
+        for _ in range(start_col + num_students - df.shape[1]):
+            df.insert(df.shape[1], df.shape[1], None)  # 添加空列
 
-    answer_text = answer_text.replace("```json", "")
-    answer_text = answer_text.replace("```", "")
-    answer_text = answer_text.strip()
-
-    data = json.loads(answer_text)
-
-    return data["answers"]
-
-def main():
-
-    print("读取学生画像...")
-
-    with open(STUDENTS_FILE, "r", encoding="utf-8") as f:
-        students = json.load(f)
-
-    print("读取问卷...")
-
-    wb = openpyxl.load_workbook(EXCEL_FILE)
-
-    questions = load_questions(wb)
-
-    questionnaire_text = build_questionnaire(questions)
-
-    total_questions = len(questions)
-
-    print(f"题目数: {total_questions}")
-    print(f"学生数: {len(students)}")
-
-    # D列开始
-    start_col = 4
-
+    # 第一行写入学生姓名
     for idx, student in enumerate(students):
-
         col = start_col + idx
+        df.iloc[0, col] = student['name']
 
-        student_name = student["name"]
-
-        print("=" * 80)
-        print(f"开始处理学生 {student_name}")
+    # 为每个学生生成答案并填充
+    for idx, student in enumerate(students):
+        col = start_col + idx
+        print(f"正在生成学生 {student['name']} 的答案...")
 
         try:
-
-            answer_text = ask_qwen(
-                profile=student,
-                questionnaire_text=questionnaire_text,
-                total_questions=total_questions
-            )
-
-            answers = parse_answers(answer_text)
-
-            print(
-                f"返回答案数: {len(answers)} / {total_questions}"
-            )
-
-            if len(answers) != total_questions:
-                raise ValueError(
-                    f"答案数量异常: {len(answers)} != {total_questions}"
-                )
-
-            # 写表头
-            for ws in wb.worksheets:
-                ws.cell(row=1, column=col).value = student_name
-
-            # 写回对应sheet
-            answer_index = 0
-
-            for ws in wb.worksheets:
-
-                for row in range(2, ws.max_row + 1):
-
-                    q = ws.cell(row=row, column=3).value
-
-                    if q is None:
-                        continue
-
-                    q = str(q).strip()
-
-                    if not q:
-                        continue
-
-                    ws.cell(
-                        row=row,
-                        column=col
-                    ).value = answers[answer_index]
-
-                    answer_index += 1
-
-            print(f"完成 {student_name}")
-
+            answers = generate_answers_for_student(student, questions)
         except Exception as e:
+            print(f"❌ 学生 {student['name']} 生成失败，已跳过：{e}")
+            df.to_excel(output_path, index=False, header=False)
+            continue
 
-            print(f"失败 {student_name}")
-            print(e)
+        # 检查答案数量
+        expected = len(questions)
+        if len(answers) != expected:
+            print(f"警告：学生 {student['name']} 的答案数量({len(answers)})与问题数量({expected})不匹配，将进行截断或补空")
+            if len(answers) > expected:
+                answers = answers[:expected]
+            else:
+                answers += [""] * (expected - len(answers))
 
-    wb.save(OUTPUT_FILE)
+        # 填充到对应列（从第2行开始，索引1）
+        for i, row_idx in enumerate(row_indices):
+            df.iloc[row_idx, col] = answers[i] if i < len(answers) else ""
 
-    print("=" * 80)
-    print("全部完成")
-    print("输出文件：", OUTPUT_FILE)
+        # 增量保存：即使后面某个学生失败，之前的结果也已经落盘
+        df.to_excel(output_path, index=False, header=False)
+        print(f"  已保存进度 -> {output_path}")
+
+    print(f"完成！所有答案已填回：{output_path}")
 
 
+# ---------- 主程序 ----------
 if __name__ == "__main__":
-    main()
+    students_file = "/home/n50059067/Vman/students.json"
+    excel_path = "/home/n50059067/Vman/动图.xlsx"
+    output_path = "问卷答案_已填.xlsx"
+
+    # 加载学生数据
+    students = load_students_from_json(students_file)
+    print(f"成功加载 {len(students)} 个学生画像。")
+
+    # 提取问题
+    questions, row_indices, _ = extract_questions_from_excel(excel_path)
+    print(f"共提取 {len(questions)} 个问题。")
+
+    # 批量生成并填充
+    fill_excel_with_students(excel_path, students, questions, row_indices, output_path)
