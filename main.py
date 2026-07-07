@@ -86,9 +86,17 @@ MBTI_EI_STYLE = {
     "E": "性格外向，表达更热烈、爱举生活化的例子，句子可以稍长一些",
     "I": "性格内向，表达更简洁内敛，不做过多铺陈和解释",
 }
+MBTI_SN_STYLE = {
+    "S": "关注具体细节和实际经验，描述时习惯举具体例子、讲清楚步骤或数字，不太说抽象大道理",
+    "N": "更关注感觉和大方向，表达时容易联想、打比方，不太纠结具体细节和精确数字，说法可以模糊一点、跳跃一点",
+}
 MBTI_TF_STYLE = {
     "T": "偏理性思考，回答里会带一点分析和条理感",
     "F": "偏感性表达，回答里更容易带情绪和感受词",
+}
+MBTI_JP_STYLE = {
+    "J": "做事有计划、比较较真，回答问题喜欢想清楚了再说、尽量说完整，不喜欢留半截",
+    "P": "做事随性、不喜欢被条条框框束缚，答题全凭当下心情，想到哪答到哪，有的题会答得很简短甚至有点敷衍，不会每题都很用心",
 }
 
 
@@ -98,8 +106,12 @@ def build_style_hint(student):
     hints = []
     if len(mbti) >= 1 and mbti[0] in MBTI_EI_STYLE:
         hints.append(MBTI_EI_STYLE[mbti[0]])
+    if len(mbti) >= 2 and mbti[1] in MBTI_SN_STYLE:
+        hints.append(MBTI_SN_STYLE[mbti[1]])
     if len(mbti) >= 3 and mbti[2] in MBTI_TF_STYLE:
         hints.append(MBTI_TF_STYLE[mbti[2]])
+    if len(mbti) >= 4 and mbti[3] in MBTI_JP_STYLE:
+        hints.append(MBTI_JP_STYLE[mbti[3]])
     return "，".join(hints)
 
 
