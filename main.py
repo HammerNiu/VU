@@ -54,31 +54,20 @@ def parse_tagged_answers(result, expected_count):
     return answers
 
 
-# 同一套硬性格式要求的几种等价措辞，每个学生随机选一版，
-# 避免所有请求都锚定在完全相同的指令文本上（Q<题号>| 的标记格式本身保持不变，不能变）
-RULE_TEMPLATES = [
-    """【强制规则】
+RULE = """【强制规则】
 1. 下面有若干道编号的题目，每题必须以 "Q<题号>|" 开头，紧接答案内容，例如：
    Q1|大概拍了450张左右，其中约80张是有意识用动态模式拍摄的
    Q2|主要用后置人像模式拍摄朋友合影
 2. 每题只占一行，即使答案较长也不要换行，用句号或分号连接
 3. 题号必须与题目编号一一对应，不要跳号、不要重复
-4. 不要加解释、不要加多余空行、不要用 markdown""",
-    """【输出格式】
-- 逐题作答，每一行对应一道题，格式固定为 "Q<题号>|你的回答"，比如：
-  Q1|大概拍了450张左右，其中约80张是有意识用动态模式拍摄的
-  Q2|主要用后置人像模式拍摄朋友合影
-- 一行写完一题，答案再长也不要换行，中间用句号/分号隔开
-- 题号顺序不能乱，也不能漏题或重复
-- 除了这些答案行，什么都不要多写（不要解释、不要空行、不要 markdown）""",
-    """作答时请严格遵守：
-① 每道题对应一行，行首固定写 "Q<题号>|"，后面直接跟答案，例如：
-   Q1|大概拍了450张左右，其中约80张是有意识用动态模式拍摄的
-   Q2|主要用后置人像模式拍摄朋友合影
-② 一行只答一题，长答案用句号/分号连接，不要换行
-③ 题号要和题目顺序对齐，既不跳号也不重复
-④ 除答案本身外不要输出任何解释、空行或 markdown 格式""",
-]
+4. 不要加解释、不要加多余空行、不要用 markdown"""
+
+DIARY_PROMPT = """请你以第一人称，回忆一下自己最近一个月的生活，写成一段自然的流水账，内容尽量具体、生活化：
+- 日常作息和最近的学习/上课情况
+- 娱乐、刷手机、打游戏、追剧等习惯，最近在看什么/玩什么
+- 周末通常怎么过
+- 和室友、朋友、家人最近的互动，有没有什么印象比较深的小事、小摩擦或小惊喜
+不用分点、不用小标题，就像随手回忆一样写成连贯的一段话，350-500字左右，可以写得琐碎一点、有点情绪，不用面面俱到，不要写成总结陈词。"""
 
 # 用画像里已有的 mbti 维度，把"人设"转成具体的语气/文风差异，
 # 而不是只让模型看到不同内容、却用同一种腔调去写
@@ -134,6 +123,25 @@ def build_phone_hint(student):
     return "；".join(parts)
 
 
+def generate_life_diary(persona_prompt):
+    """
+    让模型先以第一人称回忆近一个月的生活，作为后续回答问卷的记忆基础。
+    这段回忆会作为 assistant 历史消息带入下一次请求，
+    使问卷答案里的细节、数字有据可依，而不是逐题现场编。
+    """
+    response = client.chat.completions.create(
+        model="Qwen3-32B",
+        messages=[
+            {"role": "system", "content": persona_prompt},
+            {"role": "user", "content": DIARY_PROMPT},
+        ],
+        temperature=1.0,
+        top_p=0.95,
+        presence_penalty=0.4,
+    )
+    return response.choices[0].message.content.strip()
+
+
 def generate_answers_for_student(student, questions):
     """
     为单个学生生成问卷答案
@@ -173,27 +181,33 @@ def generate_answers_for_student(student, questions):
     phone_hint = build_phone_hint(student)
     phone_block = f"\n【手机背景】{phone_hint}。\n" if phone_hint else ""
 
-    rules_block = random.choice(RULE_TEMPLATES)
-
-    system_prompt = f"""你是一个真实的大学生，以下是你的个人信息：
+    persona_prompt = f"""你是一个真实的大学生，以下是你的个人信息：
                     {profile_str}
                     **充分代入角色**，把自己当成一个有血有肉的人。可以适当添加一些人物背景，人物性格。
-                    针对问卷问题，给出真实、合理的个人回答，保证一致性。涉及具体数量、占比等数值时，请结合你的个人画像自行给出一个合理且有个人特色的数字，不要凑整、不要和"大多数人"给出相似的数值。
                     {style_block}{phone_block}
-                    **直接逐题作答**
-
-                    {rules_block}
                 """
 
+    # 先让模型回忆近一个月的生活，再带着这段"记忆"去答题，
+    # 而不是直接甩问题让模型现场编答案
+    diary = generate_life_diary(persona_prompt)
+
     questions_text = '\n'.join(f"{i + 1}. {q}" for i, q in enumerate(questions))
+
+    answer_prompt = f"""现在请回答下面的问卷。结合你刚才回忆的近期生活来作答，能对上的细节就对上，不用刻意每题都扯上；涉及具体数量、占比等数值时，请结合你的个人画像和上面提到的生活细节给出一个合理且有个人特色的数字，不要凑整、不要和"大多数人"给出相似的数值。
+
+{RULE}
+
+{questions_text}"""
 
     response = client.chat.completions.create(
         model="Qwen3-32B",
         messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": questions_text},
+            {"role": "system", "content": persona_prompt},
+            {"role": "user", "content": DIARY_PROMPT},
+            {"role": "assistant", "content": diary},
+            {"role": "user", "content": answer_prompt},
         ],
-        temperature=1.0,
+        temperature=0.8,
         top_p=0.95,
         presence_penalty=0.4,
     )
