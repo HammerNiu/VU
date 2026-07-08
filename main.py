@@ -4,6 +4,8 @@ import pandas as pd
 from openai import OpenAI
 import json
 
+from profile_builder import build_profile_xml, build_style_hint
+
 client = OpenAI(
     api_key="token-abc123",
     base_url="http://100.102.218.124:3236/v1"
@@ -62,78 +64,33 @@ RULE = """【强制规则】
 3. 题号必须与题目编号一一对应，不要跳号、不要重复
 4. 不要加解释、不要加多余空行、不要用 markdown"""
 
-DIARY_PROMPT = """请你以第一人称，回忆一下自己最近一个月的生活，写成一段自然的流水账，内容尽量具体、生活化：
-- 日常作息和最近的学习/上课情况
-- 娱乐、刷手机、打游戏、追剧等习惯，最近在看什么/玩什么
-- 周末通常怎么过
-- 和室友、朋友、家人最近的互动，有没有什么印象比较深的小事、小摩擦或小惊喜
-不用分点、不用小标题，就像随手回忆一样写成连贯的一段话，350-500字左右，可以写得琐碎一点、有点情绪，不用面面俱到，不要写成总结陈词。"""
+MEMORY_PROMPT = """不要写日记体流水账，请为自己整理一份高密度的"个人记忆库"，作为你之后回忆自己经历、习惯和数据的依据。严格按下面四个小标题分块输出，块内按行/按点写，信息密度要高，不要用完整段落把内容连成一段叙事：
 
-# 用画像里已有的 mbti 维度，把"人设"转成具体的语气/文风差异，
-# 而不是只让模型看到不同内容、却用同一种腔调去写
-MBTI_EI_STYLE = {
-    "E": "性格外向，表达更热烈、爱举生活化的例子，句子可以稍长一些",
-    "I": "性格内向，表达更简洁内敛，不做过多铺陈和解释",
-}
-MBTI_SN_STYLE = {
-    "S": "关注具体细节和实际经验，描述时习惯举具体例子、讲清楚步骤或数字，不太说抽象大道理",
-    "N": "更关注感觉和大方向，表达时容易联想、打比方，不太纠结具体细节和精确数字，说法可以模糊一点、跳跃一点",
-}
-MBTI_TF_STYLE = {
-    "T": "偏理性思考，回答里会带一点分析和条理感",
-    "F": "偏感性表达，回答里更容易带情绪和感受词",
-}
-MBTI_JP_STYLE = {
-    "J": "做事有计划、比较较真，回答问题喜欢想清楚了再说、尽量说完整，不喜欢留半截",
-    "P": "做事随性、不喜欢被条条框框束缚，答题全凭当下心情，想到哪答到哪，有的题会答得很简短甚至有点敷衍，不会每题都很用心",
-}
+【人物经历】
+用2-3句话说清楚自己的成长背景、性格是怎么形成的、有没有什么长期影响自己的经历或习惯，不超过80字。
 
+【近期事件】
+列6-8条最近一个月内发生的具体事情，每条单独一行，格式为"大致时间+事情经过+涉及的人+结果或感受"。事情要具体到能被后续问卷直接引用，比如具体做了什么、买了什么、和谁发生了什么，不要写"过得很充实"这种空话。
 
-def build_style_hint(student):
-    """根据 mbti 拼出一句写作风格提示，让不同人设的回答在语气上也有区别"""
-    mbti = student.get("mbti", "")
-    hints = []
-    if len(mbti) >= 1 and mbti[0] in MBTI_EI_STYLE:
-        hints.append(MBTI_EI_STYLE[mbti[0]])
-    if len(mbti) >= 2 and mbti[1] in MBTI_SN_STYLE:
-        hints.append(MBTI_SN_STYLE[mbti[1]])
-    if len(mbti) >= 3 and mbti[2] in MBTI_TF_STYLE:
-        hints.append(MBTI_TF_STYLE[mbti[2]])
-    if len(mbti) >= 4 and mbti[3] in MBTI_JP_STYLE:
-        hints.append(MBTI_JP_STYLE[mbti[3]])
-    return "，".join(hints)
+【习惯与规律】
+分点列出作息时间、学习/上课规律、手机使用习惯（刷什么、玩什么、大致用量）、周末通常怎么过、消费习惯，每一点尽量给出具体的时间段、频率或数量。
 
+【关键数据】
+列8-12项与自己相关、之后回答问卷时可能会用到的具体数字，比如每日屏幕使用时长、每月话费/生活费花销、相册照片数量、每天刷短视频次数或时长、微信好友数、常联系的人数、追的剧/玩的游戏数量等。数字要符合自己的画像和上面写的经历，要有个人特色，不要凑整数、不要和"一般人"给出相似的数字。如果上面的个人信息里已经给出某个具体数值或范围（比如生活费、手机型号），这里要在其基础上给出更精确、不矛盾的数字，不要编出和画像冲突的新版本；画像没提到的再由你自己创造。
 
-def build_phone_hint(student):
+每一条都要有实际内容，不要泛泛而谈，不要加多余的总结或结尾语。"""
+
+def generate_personal_memory(persona_prompt):
     """
-    根据 phone_brand / phone / phone_purchase_priority 拼一句提示：
-    1) 约束回答里提到的品牌、系统、功能名称要和自己的手机保持一致，不要串到别的品牌上
-    2) 让"当初买手机在意什么"决定这个人对相关话题懂不懂行、愿不愿意展开讲细节
-    """
-    phone_brand = student.get("phone_brand", "")
-    phone = student.get("phone", "")
-    priority = student.get("phone_purchase_priority", [])
-
-    parts = []
-    if phone_brand or phone:
-        device = "、".join(p for p in [phone_brand, phone] if p)
-        parts.append(f"你现在用的手机是「{device}」，回答里凡是涉及手机品牌、系统或功能名称的地方，都要和这台手机保持一致，不要写成其他品牌/机型的说法")
-    if priority:
-        parts.append(f"当初买手机最看重「{'、'.join(priority)}」，问题涉及这些方面时你会更懂行、更愿意展开细节；不涉及的方面可以答得更随意、更外行一点")
-    return "；".join(parts)
-
-
-def generate_life_diary(persona_prompt):
-    """
-    让模型先以第一人称回忆近一个月的生活，作为后续回答问卷的记忆基础。
-    这段回忆会作为 assistant 历史消息带入下一次请求，
+    让模型基于人设生成一份结构化的"个人记忆库"（人物经历/近期事件/习惯规律/关键数据），
+    而不是流水账式的自然语言日记。这份记忆会作为 assistant 历史消息带入下一次请求，
     使问卷答案里的细节、数字有据可依，而不是逐题现场编。
     """
     response = client.chat.completions.create(
         model="Qwen3-32B",
         messages=[
             {"role": "system", "content": persona_prompt},
-            {"role": "user", "content": DIARY_PROMPT},
+            {"role": "user", "content": MEMORY_PROMPT},
         ],
         temperature=1.0,
         top_p=0.95,
@@ -149,66 +106,38 @@ def generate_answers_for_student(student, questions):
     questions: 问题文本列表（按顺序）
     返回答案列表（字符串列表，与 questions 一一对应）
     """
-    # 构建学生画像描述字符串（用于system_prompt）
-    def format_dict(d, indent=0):
-        lines = []
-        for k, v in d.items():
-            if isinstance(v, dict):
-                lines.append("  " * indent + f"{k}:")
-                lines.extend(format_dict(v, indent + 1))
-            elif isinstance(v, list):
-                lines.append("  " * indent + f"{k}: {', '.join(v)}")
-            else:
-                lines.append("  " * indent + f"{k}: {v}")
-        return lines
-
-    profile_lines = []
-    for key, value in student.items():
-        if key == 'name':
-            continue
-        if isinstance(value, dict):
-            profile_lines.append(f"{key}:")
-            profile_lines.extend(format_dict(value, 1))
-        elif isinstance(value, list):
-            profile_lines.append(f"{key}: {', '.join(value)}")
-        else:
-            profile_lines.append(f"{key}: {value}")
-    profile_str = '\n'.join(profile_lines)
+    # 构建学生画像描述字符串（用于system_prompt），用 XML 标签区分人设和具体事实
+    profile_str = build_profile_xml(student)
 
     style_hint = build_style_hint(student)
     style_block = f"\n【说话风格】{style_hint}，回答时让这种性格特点体现在语气和用词上，不要每个人听起来都是一个调调。\n" if style_hint else ""
 
-    phone_hint = build_phone_hint(student)
-    phone_block = f"\n【手机背景】{phone_hint}。\n" if phone_hint else ""
-
     persona_prompt = f"""你是一个真实的大学生，以下是你的个人信息：
                     {profile_str}
                     **充分代入角色**，把自己当成一个有血有肉的人。可以适当添加一些人物背景，人物性格。
-                    {style_block}{phone_block}
+                    {style_block}
                 """
 
-    # 先让模型回忆近一个月的生活，再带着这段"记忆"去答题，
+    # 先让模型基于人设生成结构化的"个人记忆库"，再带着这份记忆去答题，
     # 而不是直接甩问题让模型现场编答案
-    diary = generate_life_diary(persona_prompt)
+    memory = generate_personal_memory(persona_prompt)
 
     questions_text = '\n'.join(f"{i + 1}. {q}" for i, q in enumerate(questions))
 
-    answer_prompt = f"""现在请回答下面的问卷。结合你刚才回忆的近期生活来作答，能对上的细节就对上，不用刻意每题都扯上；涉及具体数量、占比等数值时，请结合你的个人画像和上面提到的生活细节给出一个合理且有个人特色的数字，不要凑整、不要和"大多数人"给出相似的数值。
-
-{RULE}
-
-{questions_text}"""
+    answer_prompt = f"""现在请回答下面的问卷。回答时首先要和你的个人信息保持一致，这是你身份的硬事实，不能矛盾；在此基础上，结合上面整理的个人记忆库中的具体细节和数字，让回答更真实、更细节。
+        {RULE}
+        {questions_text}"""
 
     response = client.chat.completions.create(
         model="Qwen3-32B",
         messages=[
             {"role": "system", "content": persona_prompt},
-            {"role": "user", "content": DIARY_PROMPT},
-            {"role": "assistant", "content": diary},
+            {"role": "user", "content": MEMORY_PROMPT},
+            {"role": "assistant", "content": memory},
             {"role": "user", "content": answer_prompt},
         ],
         temperature=0.8,
-        top_p=0.95,
+        top_p=0.9,
         presence_penalty=0.4,
     )
 
